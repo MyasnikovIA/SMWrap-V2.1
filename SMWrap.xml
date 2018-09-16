@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
-<Routine name="%Const" type="MAC" languagemode="0"><![CDATA[
+<Routine name="%Const" type="INC"><![CDATA[
  ; Color constants (Some duplications)  using RGB color scheme.  Three byte constant, each byte value range 0-FF.  First byte is Blue value, second is Green value third is Red value.
  ; These bytes are swapped by the $ZH function to give RGB.  The total number of available colors is 16777216. (Depending on display settings)
 #define clBlack $ZH("000000")
@@ -57,7 +57,7 @@
 #define clHighlight -2147483635
 #define clHighlightText -2147483634
 #define clBtnFace -2147483633
-#define clBtnShadow -2147483632 
+#define clBtnShadow -2147483632
 #define clGrayText -2147483631
 #define clBtnText -2147483630
 #define clInactiveCaptionText -2147483629
@@ -763,10 +763,10 @@
 <Class name="%Library.SMProject">
 <ClassType>serial</ClassType>
 <IncludeCode>%cspInclude</IncludeCode>
-<Language>cache</Language>
 <ProcedureBlock>0</ProcedureBlock>
+<StorageStrategy>Default</StorageStrategy>
 <Super>%Library.RegisteredObject</Super>
-<TimeCreated>64546,47204.477947</TimeCreated>
+<TimeCreated>64120,78093</TimeCreated>
 
 <Property name="AutoCreateForms">
 <Type>%Library.String</Type>
@@ -877,10 +877,6 @@
 <Parameter name="TRUNCATE" value="1"/>
 </Property>
 
-<Property name="Description">
-<Type>%Library.String</Type>
-</Property>
-
 <Method name="%OnNew">
 <Description><![CDATA[
 This callback method is invoked by the <METHOD>%New</METHOD> method to
@@ -891,6 +887,7 @@ provide notification that a new instance of an object is being created.
 <FormalSpec>initvalue:%CacheString</FormalSpec>
 <Language>cache</Language>
 <Private>1</Private>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -905,6 +902,7 @@ provide notification that a new instance of an object is being created.
 <ClassMethod>1</ClassMethod>
 <FormalSpec>ProjectName:%Library.String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -914,6 +912,7 @@ provide notification that a new instance of an object is being created.
 
 <Method name="Clear">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
 <Implementation><![CDATA[
@@ -942,6 +941,7 @@ provide notification that a new instance of an object is being created.
 <ClassMethod>1</ClassMethod>
 <FormalSpec>ProjectName:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
 <Implementation><![CDATA[
@@ -969,6 +969,7 @@ provide notification that a new instance of an object is being created.
 
 <Method name="GetAutoList">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -985,6 +986,7 @@ provide notification that a new instance of an object is being created.
 <Method name="GetCSPApplications">
 <ClassMethod>1</ClassMethod>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -999,33 +1001,37 @@ provide notification that a new instance of an object is being created.
  . . . s urls=urls_$lb(url)
  . s url=$order($$$CSPAPP(url))
 #else
-     ; we cannot use CSP applications in %CACHELIB namespace
-     i $znspace="%CACHELIB" q:$Q urls  q
-     n savens,result,sc
-     s savens=$znspace
-     ; we use query from %sys namespace with nonpercent classname
-     zn "%sys"
-     Set result=##class(%ResultSet).%New("Security.Applications:Detail")
-     Set sc=result.Execute("*") If $$$ISERR(sc) Quit
-     f  q:'result.Next(.sc)  d
-     . If $$$ISERR(sc) Quit
-     . ; if application type ends with "CSP"
-     . ; and exist in our work namespace
-     . i (result.Data("Type")?.E1"CSP")&(result.Data("NameSpace")=savens) d
-     . . s urls=urls_$lb(result.Data("Name"))
-     ; we must kill object with nonpercent classname from %sys namespace in %sys namespace
-     k result
-     zn savens
+	; we cannot use CSP applications in %CACHELIB namespace
+	i $znspace="%CACHELIB" q:$Q urls  q
+	n savens,result,sc
+	s savens=$znspace
+	; we use query from %sys namespace with nonpercent classname
+	zn "%sys"
+	Set result=##class(%ResultSet).%New("Security.Applications:Detail")
+	Set sc=result.Execute("*") If $$$ISERR(sc) Quit
+	f  q:'result.Next(.sc)  d
+	. If $$$ISERR(sc) Quit
+	. ; if application type ends with "CSP"
+	. ; and exist in our work namespace
+	. i (result.Data("Type")?.E1"CSP")&(result.Data("NameSpace")=savens) d
+	. . s urls=urls_$lb(result.Data("Name"))
+	; we must kill object with nonpercent classname from %sys namespace in %sys namespace
+	k result
+	zn savens
 #endif
  q:$Q urls  q
 ]]></Implementation>
 </Method>
 
-<UDLText name="T">
-<Content><![CDATA[
-/*
-ClassMethod GetCSPFiles(url As %String) As %Library.String [ Language = cache, ProcedureBlock = 0, SoapBindingStyle = document, SoapBodyUse = literal ]
-{
+<Method name="GetCSPFiles">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>url:%String</FormalSpec>
+<Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
+<ReturnType>%Library.String</ReturnType>
+<SoapBindingStyle>document</SoapBindingStyle>
+<SoapBodyUse>literal</SoapBodyUse>
+<Implementation><![CDATA[
  #define CSPAppDirDoesNotExist 5956
 
  n dir,path,setting,recurse,count,f,files,isdir
@@ -1045,13 +1051,12 @@ ClassMethod GetCSPFiles(url As %String) As %Library.String [ Language = cache, P
  . s ext=$zcvt($p(f,".",$l(f,".")),"l")
  . i (ext="csp") ! (ext="csr") ! isdir s files=files_$lb(f),count=count+1
  q:$Q files  q
-}
-*/
-]]></Content>
-</UDLText>
+]]></Implementation>
+</Method>
 
 <Method name="GetCSPList">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1071,6 +1076,7 @@ Returns list of classes in next format:
 $LB($LB(Name, FolderPath), $LB(Name, FolderPath), ...)
 </Description>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1088,6 +1094,7 @@ $LB($LB(Name, FolderPath), $LB(Name, FolderPath), ...)
 <ClassMethod>1</ClassMethod>
 <FormalSpec>FileName</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1111,6 +1118,7 @@ $LB($LB(Name, FolderPath), $LB(Name, FolderPath), ...)
 <ClassMethod>1</ClassMethod>
 <FormalSpec>url:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1142,6 +1150,7 @@ $LB($LB(Name, FolderPath), $LB(Name, FolderPath), ...)
 <ClassMethod>1</ClassMethod>
 <FormalSpec>Node:%Library.String,startbit:%Library.Integer</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1171,6 +1180,7 @@ ERR
 
 <Method name="GetGlobalsList">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1186,6 +1196,7 @@ ERR
 
 <Method name="GetIncludesList">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1205,6 +1216,7 @@ Returns list build of projects names
 </Description>
 <ClassMethod>1</ClassMethod>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1220,6 +1232,7 @@ Returns list build of projects names
 
 <Method name="GetRoutinesList">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1235,6 +1248,7 @@ Returns list build of projects names
 
 <Method name="Load">
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
 <Implementation><![CDATA[
@@ -1344,6 +1358,7 @@ Returns list build of projects names
 Saves current project. Method returns 1 in case of success and 0 otherwise. If method is called inside
 </Description>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Integer</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1498,6 +1513,7 @@ $LB($LB(Name, OrefVar), $LB(Name, OrefVar), ...)
 </Description>
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1515,6 +1531,7 @@ $LB($LB(Name, FilePath), $LB(Name, FilePath), ...)
 </Description>
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1532,6 +1549,7 @@ $LB($LB(Name, FolderPath), $LB(Name, FolderPath), ...)
 </Description>
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1549,6 +1567,7 @@ $LB(GlobalName1, GlobalName2, ...)
 </Description>
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1562,6 +1581,7 @@ $LB(GlobalName1, GlobalName2, ...)
 <Method name="SetIconsList">
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1580,6 +1600,7 @@ $LB(IncludeName1, IncludeName2, ...)
 </Description>
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1593,6 +1614,7 @@ $LB(IncludeName1, IncludeName2, ...)
 <Method name="SetPicturesList">
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1611,6 +1633,7 @@ $LB(RoutineName1, RoutineName2, ...)
 </Description>
 <FormalSpec>ListBuild:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.Status</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1625,6 +1648,7 @@ $LB(RoutineName1, RoutineName2, ...)
 <ClassMethod>1</ClassMethod>
 <FormalSpec>Name:%String</FormalSpec>
 <Language>cache</Language>
+<ProcedureBlock>0</ProcedureBlock>
 <ReturnType>%Library.String</ReturnType>
 <SoapBindingStyle>document</SoapBindingStyle>
 <SoapBodyUse>literal</SoapBodyUse>
@@ -1645,797 +1669,6 @@ $LB(RoutineName1, RoutineName2, ...)
  If ts'="" Set ts=$zdt(ts,3)
  Quit ts
 TSERR Quit ""
-]]></Implementation>
-</Method>
-
-<Method name="GetCSPFiles">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>url:%String</FormalSpec>
-<Language>cache</Language>
-<ReturnType>%Library.String</ReturnType>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[
- #define CSPAppDirDoesNotExist 5956
-
- n dir,path,setting,recurse,count,f,files,isdir
- i $e(url,$L(url))="/"!($e(url,$L(url))="\") s url=$e(url,1,$l(url)-1)
- ; s setting=$$getapp^%cspServer(url_"/",.path)
- ; i setting="" q $$$ERROR($$$CSPApplicationDoesNotExist,url)
- ; s recurse=$lg(setting,3,0)
- s recurse=1
- s dir=##class(%File).NormalizeDirectory($$GetFilename^%apiCSP(url_"/"))
- i '##class(%File).DirectoryExists(dir) q $$$ERROR($$$CSPAppDirDoesNotExist,dir,url)
- s files=""
- s f=$zsearch(dir_"*"),count=1
- f  q:f=""  d  s f=$zsearch("")
- . s isdir=##class(%File).DirectoryExists(f)
- . i 'recurse,isdir q
- . i isdir,$e($tr(f,"\","/"),$l(f)-2,32767)="/.."!($e($tr(f,"\","/"),$l(f)-1,32767)="/.") Quit
- . s ext=$zcvt($p(f,".",$l(f,".")),"l")
- . i (ext="csp") ! (ext="csr") ! isdir s files=files_$lb(f),count=count+1
- q:$Q files  q
-]]></Implementation>
-</Method>
-
-<Method name="IsSMWrapForm">
-<Description>
-Проверка Является ли класс SMWrap формой
-s isForm=##class(%%ZSMWrap.Class).IsSMWrapForm("%s")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName=""</FormalSpec>
-<ReturnType>%Boolean</ReturnType>
-<Implementation><![CDATA[
-   if ClassName="%TMFormClass"          q 1
-   if ClassName="%Library.TMFormClass"  q 1
-   q:'$d(^oddDEF(ClassName,60)) 0
-   if $l(^oddDEF(ClassName,60),"%TMFormClass")>1          q 1
-   if $l(^oddDEF(ClassName,60),"%Library.TMFormClass")>1  q 1
-   s res=0
-   for i=1:1:$l(^oddDEF(ClassName,60),",") {
-         s SubClass=$p(^oddDEF(ClassName,60),",",i)
-         if $l(SubClass,".")=1,$l(SubClass,"%")=2 s SubClass="%Library."_SubClass
-         if $l(SubClass,".")=1                    s SubClass="User."_SubClass
-         if $d(^oddDEF(SubClass)) {
-             if $d(^oddDEF(SubClass,60)) { 
-               if $l(^oddDEF(SubClass,60),"%Library.TMFormClass")>1   s res=1  q
-             }   
-         }
-   }
-   q res
-]]></Implementation>
-</Method>
-
-<Method name="IsWebForm">
-<Description>
-Проверка Является ли класс Web формой
-s isForm=##class(%%ZSMWrap.Class).IsWebForm("%s")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName=""</FormalSpec>
-<ReturnType>%Boolean</ReturnType>
-<Implementation><![CDATA[
-   if ClassName="%TMWebFormClass"          q 1
-   if ClassName="%Library.TMWebFormClass"  q 1
-   q:'$d(^oddDEF(ClassName,60)) 0
-   if $l(^oddDEF(ClassName,60),"%TMWebFormClass")>1          q 1
-   if $l(^oddDEF(ClassName,60),"%Library.TMWebFormClass")>1  q 1
-   s res=0
-   for i=1:1:$l(^oddDEF(ClassName,60),",") {
-         s SubClass=$p(^oddDEF(ClassName,60),",",i)
-         if $l(SubClass,".")=1,$l(SubClass,"%")=2 s SubClass="%Library."_SubClass
-         if $l(SubClass,".")=1                    s SubClass="User."_SubClass
-         if $d(^oddDEF(SubClass)) {
-             if $d(^oddDEF(SubClass,60)) { 
-               if $l(^oddDEF(SubClass,60),"%Library.TMWebFormClass")>1   s res=1  q
-             }   
-         }
-   }
-   q res
-]]></Implementation>
-</Method>
-
-<Method name="AnalyzeObject">
-<Description>
-%ZSMWrap.Utility</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName=""</FormalSpec>
-<Implementation><![CDATA[
-     zw ^oddDEF(ClassName,"m","DesignDefinition")
-     
- ; ^oddDEF(ClassName,"m","DesignDefinition",30)=57     
- ; ^oddDEF(ClassName,"m","DesignDefinition",30,1)="#if 0"
- ; ^oddDEF(ClassName,"m","DesignDefinition",30,57)="#endif"
- q
-]]></Implementation>
-</Method>
-
-<Method name="GetTemplateList">
-<Description>
-s obj=##class(%ZSMWrap.Class).GetTemplateList()
-Получить список шаблонов</Description>
-<ClassMethod>1</ClassMethod>
-<Implementation><![CDATA[
-     k ^mtempZSMWrapClassGetTemplateList($Job)
-    s ClassName=""
-    for {
-       s ClassName=$o(^oddDEF(ClassName))
-       q:ClassName=""
-       if '$d(^oddDEF(ClassName,60)) continue
-       if ^oddDEF(ClassName,60)'="%ZSMWrap.Class" continue
-       if '$d(^oddDEF(ClassName,"p","Super",22)) continue
-       if '$d(^oddDEF(ClassName,"p","Name",22)) continue
-       if '$d(^oddDEF(ClassName,"p","Descript",22)) continue
-       s ^mtempZSMWrapClassGetTemplateList($Job,ClassName)=$LB(ClassName,^oddDEF(ClassName,"p","Name",22),^oddDEF(ClassName,"p","Super",22),^oddDEF(ClassName,"p","Descript",22))
-    }
-]]></Implementation>
-</Method>
-
-<Method name="GetClassInfo">
-<Description>
-s listInfo=##class(%ZSMWrap.Class).GetClassInfo("%s")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName=""</FormalSpec>
-<ReturnType>%List</ReturnType>
-<Implementation><![CDATA[
-   s res=$LB()
-   ; |     (ColIndex(1)) = "Name"
-   s $LI(res,1)=ClassName
-   ; |     (ColIndex(2)) = "Super"
-   if $d(^oddDEF(ClassName,60)) s $LI(res,2)=^oddDEF(ClassName,60)
-   e                             s $LI(res,2)=""
-   ; |     (ColIndex(3)) = "Hidden"
-   if $d(^oddDEF(ClassName,32)) s $LI(res,3)=^oddDEF(ClassName,32)
-   e                             s $LI(res,3)=0
-   ; |     (ColIndex(4)) = "Datatype" 
-   if $d(^oddDEF(ClassName,23)) s $LI(res,4)=^oddDEF(ClassName,23)
-   e                             s $LI(res,4)=""
-   ; |     (ColIndex(5)) = "System" 
-   if $d(^oddDEF(ClassName,61)) s $LI(res,5)=^oddDEF(ClassName,61)
-   e                             s $LI(res,5)=0
-   ; |     (ColIndex(6)) = "Final"   
-   if $d(^oddDEF(ClassName,7)) s $LI(res,6)=^oddDEF(ClassName,7)
-   e                             s $LI(res,6)=0
-   ; |     (ColIndex(7)) = "Persistent"  
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Persistent" s $li(res,7)=1
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Persistent" s $li(res,7)=0
-   if '$d(^oddDEF(ClassName,23)) s $li(res,7)=0
-   ; |     (ColIndex(8)) = "Serial"     
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Serial" s $li(res,8)=1
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Serial" s $li(res,8)=0
-   if '$d(^oddDEF(ClassName,23)) s $li(res,8)=0
-   ; |     (ColIndex(9)) = "TimeChanged"
-   if $d(^oddDEF(ClassName,64)) s $LI(res,9)=^oddDEF(ClassName,64)
-   e                             s $LI(res,9)=$h
-   ; |     (ColIndex(10)) = "SqlTableName"   
-   if $d(^oddDEF(ClassName,58)) s $LI(res,10)=^oddDEF(ClassName,58)
-   e                             s $LI(res,10)=$h
-   q res
-]]></Implementation>
-</Method>
-
-<Method name="FillList">
-<Description>
-Получить полный список доступных полей в блоке 
-procedure TMainForm.FillParamList(Prop : PCacheProperty; ListView: TListView);
-do ##class(%%ZSMWrap.Class).FillList("%s","a",.ResultGlobal)
-do ##class(%%ZSMWrap.Class).FillList("%s","m",.ResultGlobal)
-do ##class(%%ZSMWrap.Class).FillList("%s","p",.ResultGlobal)
-do ##class(%%ZSMWrap.Class).FillList("%s","q",.ResultGlobal)
-do ##class(%%ZSMWrap.Class).FillList("%s","x",.ResultGlobal)</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName="",Block="a",ResultGlobal</FormalSpec>
-<Implementation><![CDATA[
-   k ResultGlobal
-   q:'$d(^oddDEF(ClassName,60)) 
-   
-   s Property="" 
-   for {
-      s Property=$o(^oddDEF(ClassName,Block,Property))
-      q:Property="" 
-      s @ResultGlobal(Property)=1
-   }
-   
-   for i=1:1:$l(^oddDEF(ClassName,60),",") {
-         s SubClass=$p(^oddDEF(ClassName,60),",",i)
-        s Property="" 
-        for {
-           s Property=$o(^oddDEF(SubClass,Block,Property))
-           q:Property="" 
-           s @ResultGlobal(Property)=1
-        }
-   }
-]]></Implementation>
-</Method>
-
-<Method name="LoadClassInfo">
-<Description>
-w ##class(%ZSMWrap.Class).SaveClassInfo("User.del")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName=""</FormalSpec>
-<ReturnType>%List</ReturnType>
-<Implementation><![CDATA[
-    s res=$lb()
-     q:ClassName="" res
-     /*
-   var  InfoListTmp : TCacheList;
-   InfoListTmp := TCacheList.Create;
-   InfoListTmp.list := CacheConnect.Read('##class(%ZSMWrap.Class).LoadClassInfo("'+ObjectName+'")');
- 1  IsProcedureBlock :=InfoListTmp.li[1];
- 2  IsFinal          :=InfoListTmp.li[2];
- 3  IsSystem         :=InfoListTmp.li[3];
- 4  IsClassType      :=InfoListTmp.li[4];
- 5  IsAbstract       :=InfoListTmp.li[5];
- 6  IsNoContext      :=InfoListTmp.li[6];
-  ; Дата создания  ^oddDEF("User.del",63)="64493,54267.289681"
-  ; Дата изменения ^oddDEF("User.del",64)="64493,54195.171219"
-  ; Super          ^oddDEF("User.del",60)
-  ; Дескриптор     ^oddDEF("User.del",4)
-  ; SqlTableName   ^oddDEF("User.del",58)="tab1"
-  ; -------------------------------------
-  ; Abstract       ^oddDEF("User.del",21)=1
-  ; Not Abstract   ^oddDEF("User.del",21)=0
-  ; -------------------------------------
-  ; Final       ^oddDEF("User.del",7)=1
-  ; Not Final   ^oddDEF("User.del",7)=0
-  ; -------------------------------------
-  ; Hidden         ^oddDEF("User.del",32)=1
-  ; Not Hidden     ^oddDEF("User.del",32)=0
-  ; -------------------------------------
-  ; System         ^oddDEF("User.del",61)=1
-  ; Not System     ^oddDEF("User.del",61)=0
-   */ 
-  /* 1  IsProcedureBlock */   
-   if $d(^oddDEF(ClassName,46)) s:^oddDEF(ClassName,46)=1 $li(res,1)="ProcedureBlock"   s:^oddDEF(ClassName,46)=0 $li(res,1)="Not ProcedureBlock"
-  if '$d(^oddDEF(ClassName,46)) s $li(res,1)=""
-  /* 2  IsFinal  */
-  if $d(^oddDEF(ClassName,7))  s:^oddDEF(ClassName,7)=1 $li(res,2)="Final"    s:^oddDEF(ClassName,7)=0 $li(res,2)="Not Final"
-  if '$d(^oddDEF(ClassName,7))     s $li(res,2)=""  
-  /* 3 IsSystem  */      
-   if $d(^oddDEF(ClassName,61))  s:^oddDEF(ClassName,61)="System" $li(res,3)=1  s:^oddDEF(ClassName,61)=0 $li(res,3)="System"
-  if '$d(^oddDEF(ClassName,61))  s $li(res,3)=""  
-  /* 4 IsClassType   */       
-   if $d(^oddDEF(ClassName,23))  s $li(res,4)=^oddDEF(ClassName,23)   
-  if '$d(^oddDEF(ClassName,23))  s $li(res,4)=""  
-  /* 5 IsAbstract */
-   if $d(^oddDEF(ClassName,21))  s:^oddDEF(ClassName,21)=1 $li(res,5)="Abstract"   s:^oddDEF(ClassName,21)=0 $li(res,5)="Not Abstract"   
-  if '$d(^oddDEF(ClassName,21))  s $li(res,5)=""  
-  /* 6 IsNoContext */
-   if $d(^oddDEF(ClassName,42))  s:^oddDEF(ClassName,42)=1 $li(res,6)="NoContext"   s:^oddDEF(ClassName,42)=0 $li(res,6)="Not NoContext"   
-  if '$d(^oddDEF(ClassName,42))  s $li(res,6)=""  
-  q res
-]]></Implementation>
-</Method>
-
-<Method name="SaveClassInfo">
-<Description>
-w ##class(%ZSMWrap.Class).SaveClassInfo("User.del")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName="",Super="",Description="",Language="",CompileAfter="",CodeInc="",GeneratorInc="",IsProcedureBlock="",IsFinal="",IsSystem="",IsClassType="",IsAbstract="",IsNoContext=""</FormalSpec>
-<ReturnType>%String</ReturnType>
-<Implementation><![CDATA[
-  s ^debug=$LB(ClassName , Super , Description , Language , CompileAfter , CodeInc , GeneratorInc , IsProcedureBlock , IsFinal , IsSystem , IsClassType , IsAbstract , IsNoContext )
-  s $ZTRAP="err"
-  
-  if $zObjClassMethod("%CompiledClass","%ExistsId",ClassName)=1 {
-     s tt=##class(%Dictionary.ClassDefinition).%OpenId(ClassName)    
-  }else{
-     s tt=##class(%Dictionary.ClassDefinition).%New(ClassName)    
-  }
-  q:'tt "Error:1111"
-  ; s tt.Super=Super
-  ; s tt.Description=Description
-  ; s tt.Language=Language
-  ; s tt.CompileAfter=CompileAfter  
-  ; s tt.IncludeCode=CodeInc
-  ; s tt.IncludeGenerator=GeneratorInc 
-  
-  ; "ProcedureBlock","Final","System","datatype","Abstract","NoContext"
-  s:IsProcedureBlock="ProcedureBlock" tt.ProcedureBlock=1
-  s:'IsProcedureBlock="ProcedureBlock" tt.ProcedureBlock=0
-  s:IsFinal="Final" tt.Final=1
-  s:'IsFinal="Final" tt.Final=0
-  s:IsSystem="System" tt.System=1
-  s:'IsSystem="System" tt.System=0
-  s tt.ClassType=IsClassType
-  s:IsAbstract="Abstract" tt.Abstract=1
-  s:'IsAbstract="Abstract" tt.Abstract=0
-  s:IsNoContext="NoContext" tt.NoContext=1
-  s:'IsNoContext="NoContext" tt.NoContext=0
-  d tt.%Save()
-  
-  ; k:Description="" ^oddDEF(ClassName,4)
-  ; k:Super="" ^oddDEF(ClassName,60) 
-  ; k:Language="" ^oddDEF(ClassName,39) 
-  ; k:CompileAfter="" ^oddDEF(ClassName,28) 
-  ; k:CodeInc="" ^oddDEF(ClassName,35)
-  ; k:GeneratorInc="" ^oddDEF(ClassName,37)
-  ; k:IsProcedureBlock="" ^oddDEF(ClassName,46)
-  d tt.%Save()
-  k:IsFinal="" ^oddDEF(ClassName,7)
-  d tt.%Save()
-  k:IsSystem="" ^oddDEF(ClassName,61)
-  d tt.%Save()
-  k:IsClassType="" ^oddDEF(ClassName,23)
-  d tt.%Save()
-  k:IsAbstract="" ^oddDEF(ClassName,21)
-  d tt.%Save()
-  k:IsNoContext="" ^oddDEF(ClassName,42)
-  d tt.%Save()
-  q tt.Name
-  
-err
-  q "Error save:"_ClassName_$c(13,10)_$ZE  
-  /*
- s tt=##class(%Dictionary.ClassDefinition).%OpenId("User.del")
- s tt.ProcedureBlock=""
- d tt.%Save()
- k ^oddDEF("User.del",46)
- d tt.%Save()
- zw ^oddDEF("User.del")
- */
-]]></Implementation>
-</Method>
-
-<Method name="GetClassInfoOld">
-<Description>
-w ##class(%ZSMWrap.Class).GetClassInfo("User.del")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName=""</FormalSpec>
-<ReturnType>%List</ReturnType>
-<Implementation><![CDATA[
-     s res=$lb()
-    q:'$d(^oddDEF(ClassName)) res
-     
-     s $li(res,1)=Name
-     ; Super 
-     if $d(^oddDEF(ClassName,60)) {
-       s $li(res,2)=^oddDEF(ClassName,60) 
-      }else{
-        s $li(res,2)=""  
-     }  
-   /*3  "Hidden" */
-    if $d(^oddDEF(ClassName,32)) {
-       s $li(res,3)=^oddDEF(ClassName,32) ; 
-    }else{
-        s $li(res,3)=""  
-     }  
-    ; ----------------------------------------- 
-     /*4 ClassType "Datatype" */ 
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Datatype" s $li(res,4)=1
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Datatype" s $li(res,4)=0
-        if '$d(^oddDEF(ClassName,23)) s $li(res,4)=0
-     ; ----------------------------------------- 
-     /*5 ClassType "System" */ 
-       if $d(^oddDEF(ClassName,61)) {
-          s $li(res,5)=^oddDEF(ClassName,61) ; 
-       }else{
-           s $li(res,5)=0  
-       }  
-    ; ----------------------------------------- 
-    
-    /*6  "Final" */
-      if $d(^oddDEF(ClassName,7)) {
-        s $li(res,6)=^oddDEF(ClassName,7)  ; 
-      }else{
-         s $li(res,6)=0  
-      }
-    ; ----------------------------------------- 
-    
-     /*7 ClassType "Persistent" */ 
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Persistent" s $li(res,7)=1
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Persistent" s $li(res,7)=0
-        if '$d(^oddDEF(ClassName,23)) s $li(res,7)=0
-     ; ----------------------------------------- 
-    
-    /*8 ClassType  "Serial" */  
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Serial" s $li(res,8)=1
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Serial" s $li(res,8)=0
-        if '$d(^oddDEF(ClassName,23)) s $li(res,8)=0
-     ; ----------------------------------------- 
- 
-     q res
-]]></Implementation>
-</Method>
-
-<Method name="ReadClassInfo">
-<Description>
-
-   d ##class(%ZSMWrap.Class).ReadClassInfo()</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>Filtr=""</FormalSpec>
-<Implementation><![CDATA[
-  ; Дата создания  ^oddDEF("User.del",63)="64493,54267.289681"
-  ; Дата изменения ^oddDEF("User.del",64)="64493,54195.171219"
-  ; Super          ^oddDEF("User.del",60)
-  ; Дескриптор     ^oddDEF("User.del",4)
-  ; SqlTableName   ^oddDEF("User.del",58)="tab1"
-  ; -------------------------------------
-  ; Abstract       ^oddDEF("User.del",21)=1
-  ; Not Abstract   ^oddDEF("User.del",21)=0
-  ; -------------------------------------
-  ; Final       ^oddDEF("User.del",7)=1
-  ; Not Final   ^oddDEF("User.del",7)=0
-  ; -------------------------------------
-  ; Hidden         ^oddDEF("User.del",32)=1
-  ; Not Hidden     ^oddDEF("User.del",32)=0
-  ; -------------------------------------
-  ; System         ^oddDEF("User.del",61)=1
-  ; Not System     ^oddDEF("User.del",61)=0
-  ; -------------------------------------
-  ; -------------------------------------
-  ; ClassType      ^oddDEF("User.del",23)="datatype"|index|persistent|serial|stream|view
-  ;     CacheClass.IsClassDataType := Boolean(StrToInt( InfoList.li[4] ));
-  ;     CacheClass.IsClassPersistent := Boolean(StrToIntDef(InfoList.li[7], 0));
-  ;     CacheClass.IsClassSerial := Boolean(StrToIntDef(InfoList.li[8], 0));
-    s ClassName=""
-    for {
-       s ClassName=$o(^oddDEF(ClassName))
-       q:ClassName=""
-       s Name=ClassName
-       if Filtr'="",$l($ZCVT(Name,"L"),$ZCVT(Filtr,"L"))=1  continue 
-       s ^mtempZSMWrapClassReadClassInfo($Job,Name)=$lb() 
-       s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),1)=Name
-
-     /*2 "Super"  */
-      if $d(^oddDEF(ClassName,60)) {
-       s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),2)=^oddDEF(ClassName,60) ; 
-      }else{
-        s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),2)=0  
-     }  
-     ; ----------------------------------------- 
-
-    /*3  "Hidden" */
-    if $d(^oddDEF(ClassName,32)) {
-       s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),3)=^oddDEF(ClassName,32) ; 
-    }else{
-        s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),3)=0  
-     }  
-    ; ----------------------------------------- 
-    
-   
-     /*4 ClassType "Datatype" */ 
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Datatype" s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),4)=1
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Datatype" s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),4)=0
-        if '$d(^oddDEF(ClassName,23)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),4)=0
-     ; ----------------------------------------- 
-
-
-     /*5 ClassType "System" */ 
-       if $d(^oddDEF(ClassName,61)) {
-          s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),5)=^oddDEF(ClassName,61) ; 
-       }else{
-           s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),5)=0  
-       }  
-    ; ----------------------------------------- 
-    
-    /*6  "Final" */
-      if $d(^oddDEF(ClassName,7)) {
-        s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),6)=^oddDEF(ClassName,7)  ; 
-      }else{
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),6)=0  
-      }
-    ; ----------------------------------------- 
-    
-     /*7 ClassType "Persistent" */ 
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Persistent" s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),7)=1
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Persistent" s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),7)=0
-        if '$d(^oddDEF(ClassName,23)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),7)=0
-     ; ----------------------------------------- 
-    
-    /*8 ClassType  "Serial" */  
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Serial" s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),8)=1
-        if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Serial" s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),8)=0
-        if '$d(^oddDEF(ClassName,23)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),8)=0
-     ; ----------------------------------------- 
-    
-    /*9  "TimeChanged" */        
-      if $d(^oddDEF(ClassName,60)) {
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),9)=^oddDEF(ClassName,60) ; 
-       }else{
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),9)=0  
-      }
-     ; ----------------------------------------- 
-    
-    /*10 ??????? */ 
-        ; s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),10)=rset.%Get("SqlTableName")
-        s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),10)=""
-     
-     /*11  "Abstract" */   
-        if $d(^oddDEF(ClassName,21)) {
-          s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),11)=^oddDEF(ClassName,21) ; 
-        }else{
-            s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),11)=0
-        }
-    ; ----------------------------------------- 
-    
-     /*12  "ClassType" */   
-        if $d(^oddDEF(ClassName,23))  s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),12)=^oddDEF(ClassName,23)
-        if '$d(^oddDEF(ClassName,23)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),12)=""
-    ; ----------------------------------------- 
-    
-    /*13  "NoContext" 42*/   
-        if $d(^oddDEF(ClassName,42))  s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),13)=^oddDEF(ClassName,42)
-        if '$d(^oddDEF(ClassName,42)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),13)=""
-    ; ----------------------------------------- 
-    
-    /*14  "Final" 7*/   
-        if $d(^oddDEF(ClassName,7))  s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),14)=^oddDEF(ClassName,7)
-        if '$d(^oddDEF(ClassName,7)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),14)=""
-    ; ----------------------------------------- 
-    
-    /*15  "ProcedureBlock" 46*/   
-        if $d(^oddDEF(ClassName,46))  s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),15)=^oddDEF(ClassName,46)
-        if '$d(^oddDEF(ClassName,46)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),15)=""
-    ; ----------------------------------------- 
-    
-    /*16  "Abstract" 21*/   
-        if $d(^oddDEF(ClassName,21))  s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),16)=^oddDEF(ClassName,21)
-        if '$d(^oddDEF(ClassName,21)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),16)=""
-    ; ----------------------------------------- 
-    /*17  "Hidden" 32*/   
-        if $d(^oddDEF(ClassName,32))  s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),17)=^oddDEF(ClassName,32)
-        if '$d(^oddDEF(ClassName,32)) s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),17)=""
-    ; ----------------------------------------- 
-  }
-]]></Implementation>
-</Method>
-
-<Method name="ReadClassInfo1">
-<Description>
-d ##class(%ZSMWrap.Class).ReadClassInfo()</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>Filtr=""</FormalSpec>
-<Implementation><![CDATA[
-     k ^mtempZSMWrapClassReadClassInfo($Job)
-  // "%Dictionary.ClassDefinition:Summary"
-    SET tStatement = ##class(%SQL.Statement).%New(2)
-    SET qStatus = tStatement.%PrepareClassQuery("%Dictionary.ClassDefinition","Summary")
-    SET rset = tStatement.%Execute()
-    s QMeta=rset.%GetMetaData()
-    WHILE rset.%Next() {
-         s Name=rset.%Get("Name")
-         if Filtr'="",$l($ZCVT(Name,"L"),$ZCVT(Filtr,"L"))=1  continue
-         s ^mtempZSMWrapClassReadClassInfo($Job,Name)=$lb()
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),1)=rset.%Get("Name")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),2)=rset.%Get("Super")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),3)=rset.%Get("Hidden")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),4)=rset.%Get("Datatype")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),5)=rset.%Get("System")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),6)=rset.%Get("Final")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),7)=rset.%Get("Persistent")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),8)=rset.%Get("Serial")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),9)=rset.%Get("TimeChanged")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),10)=rset.%Get("SqlTableName")
-         s $li(^mtempZSMWrapClassReadClassInfo($Job,Name),11)=rset.%Get("Abstract")
-        //     Name Super     Hidden    Datatype  System    Final     Persistent     Serial    TimeChanged    SqlTableName   Abstract
-         // rset.%Get("Name"),!
-         // rset.%Get("Super"),!
-         // rset.%Get("Hidden"),!
-         // rset.%Get("Datatype"),!
-         // rset.%Get("System"),!
-         // rset.%Get("Final"),!
-         // rset.%Get("Persistent"),!
-         // rset.%Get("Serial"),!
-         // rset.%Get("TimeChanged"),!
-         // rset.%Get("SqlTableName"),!
-         // rset.%Get("Abstract"),!
-    ;  for ColNum=1:1:QMeta.columnCount    {
-     ;    s val=rset.%GetData(ColNum)
-    ;    s nam=QMeta.columns.GetAt(ColNum).colName
-    ;    w " "_nam_"="_val_" "
-    ;  }
-    ;  w !
-    }
-    
-    /*
-    d SQLobj.%Prepare(SqlStrTmp)
-    s DataSet=SQLobj.%Execute()
-    s QMeta=DataSet.%GetMetaData()
-    while DataSet.%Next()
-    {
-      for ColNum=1:1:QMeta.columnCount    {
-        s val=DataSet.%GetData(ColNum)
-        s nam=QMeta.columns.GetAt(ColNum).colName
-        w " "_nam_"="_val_" "
-      } 
-      w ! 
-    }
-  set res=""
-  */
-]]></Implementation>
-</Method>
-
-<Method name="RenameClass">
-<Description>
-Переименовать класс  
- w ##class(%ZSMWrap.Class).RenameClass(ClassNameOld,ClassNameNew)</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassNameOld,ClassNameNew</FormalSpec>
-<ReturnType>%String</ReturnType>
-<Implementation><![CDATA[
-   if $l(ClassNameNew,".")=1 s ClassNameNew="User."_ClassNameNew
-   if $zObjClassMethod("%CompiledClass","%ExistsId",ClassNameNew)=0 { 
-     s tt=##class(%Dictionary.ClassDefinition).%OpenId(ClassNameOld)
-     s oZak=tt.%ConstructClone()
-     d tt.%Delete(tt.%Oid())
-     s oZak.Name=ClassNameNew
-     d oZak.%Save()
-     q ClassNameNew
-   }else{
-      q "Error: Класс с таким именем уже существует. Необходимо ввести другое имя класса"
-   }
-]]></Implementation>
-</Method>
-
-<Method name="CopyClass">
-<Description>
-Копировать класс  
-w ##class(%ZSMWrap.Class).CopyClass(ClassNameOld,ClassNameNew)</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassNameOld,ClassNameNew</FormalSpec>
-<ReturnType>%String</ReturnType>
-<Implementation><![CDATA[
-   if $l(ClassNameNew,".")=1 s ClassNameNew="User."_ClassNameNew
-   if $zObjClassMethod("%CompiledClass","%ExistsId",ClassNameNew)=0 { 
-     s tt=##class(%Dictionary.ClassDefinition).%OpenId(ClassNameOld)
-     s oZak=tt.%ConstructClone()
-     s oZak.Name=ClassNameNew
-     d oZak.%Save() 
-     q ClassNameNew
-   }else{
-      q "Error: Класс с таким именем уже существует "
-   }
-]]></Implementation>
-</Method>
-
-<Method name="NewClass">
-<Description>
-w ##class(%ZSMWrap.Class).CopyClass(ClassNameOld,ClassNameNew)</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName</FormalSpec>
-<ReturnType>%String</ReturnType>
-<Implementation><![CDATA[
-   if $zObjClassMethod("%CompiledClass","%ExistsId",ClassName)=0 {    
-     s tt=##class(%Dictionary.ClassDefinition).%OpenId(ClassNameOld)
-     s oZak=tt.%ConstructClone()
-     s oZak.Name=ClassNameNew
-     d oZak.%Save() 
-     q ClassNameNew
-   }else{
-      q "Error: Класс с таким именем уже существует "
-   }
-]]></Implementation>
-</Method>
-
-<Method name="NewClassList">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName</FormalSpec>
-<ReturnType>%String</ReturnType>
-<Implementation><![CDATA[
-   s ClassName=""
-   for {
-     s ClassName=$o(^oddDEF(ClassName))
-     q:ClassName=""
-     if '$d(^oddDEF(ClassName,60)) continue
-     if ^oddDEF(ClassName,60)'="%ZHTML.SMWrap" continue
-     if '$d(^oddDEF(ClassName,"p","Super",22)) continue
-     if '$d(^oddDEF(ClassName,"p","Name",22)) continue
-     if '$d(^oddDEF(ClassName,"p","Descript",22)) continue
-     w ClassName,!
-     // w ^oddDEF(ClassName,"p","Name",22),!
-   }
-]]></Implementation>
-</Method>
-
-<Method name="IsParentClass">
-<Description>
-Проверка Является ли класс SMWrap формой
-s isForm=##class(%%Library.SMProject).IsParentClass("%s","%s")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ClassName="",ClassParent=""</FormalSpec>
-<ReturnType>%Boolean</ReturnType>
-<Implementation><![CDATA[
-   q:'$d(^oddDEF(ClassName,60)) 0
-   if $l(^oddDEF(ClassName,60),ClassParent)>1  q 1
-   s res=0
-   for i=1:1:$l(^oddDEF(ClassName,60),",") {
-         s SubClass=$p(^oddDEF(ClassName,60),",",i)
-         if $d(^oddDEF(SubClass)) {
-             if $d(^oddDEF(SubClass,60)) { 
-               if $l(^oddDEF(SubClass,60),ClassParent)>1   s res=1  q
-             }   
-         }
-   }
-   q res
-]]></Implementation>
-</Method>
-
-<Method name="CreateNewClass">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>ParentClassName="",ClassNameNew="",SupperClassList=""</FormalSpec>
-<Language>cache</Language>
-<ReturnType>%Library.String</ReturnType>
-<Implementation><![CDATA[
-  if ClassNameNew="" {
-      q "Error:  Имя клаксса не может быть пустым."
-   }
-   if $zObjClassMethod("%CompiledClass","%ExistsId",ClassNameNew)=1 {
-      q "Error: Класс с таким именем уже существует. Задайте другое имя класса."
-   }
-
-   if $l(ParentClassName)>0,$d(^oddDEF(ParentClassName,60)),^oddDEF(ParentClassName,60)="%ZSMWrap.Class" {
-             s ttOld=##class(%Dictionary.ClassDefinition).%OpenId(ParentClassName)
-             s ttNew=ttOld.%ConstructClone()
-             s ttNew.Name=ClassNameNew
-               // s ttNew.Super=^oddDEF(ParentClassName,"p","Super",22)
-             s ttNew.Super=SupperClassList
-             for i=1:1:ttNew.Parameters.Count() {
-                if (ttNew.Parameters.GetAt(i).Name="Super")
-                   ||(ttNew.Parameters.GetAt(i).Name="Descript")
-                   ||(ttNew.Parameters.GetAt(i).Name="Name")
-                {
-                  d ttNew.Parameters.GetAt(i).%Delete(ttNew.Parameters.GetAt(i).%Oid())
-                  d ttNew.Parameters.RemoveAt(i)
-                  d ttNew.%Save()
-                 }
-             }
-             if $d(^oddDEF(ParentClassName,"x"))  {
-                 s IndName=""
-                 for  {
-                    s IndName=$o(^oddDEF(ParentClassName,"x",IndName))
-                    q:IndName=""
-                    s ^oddDEF(ttNew.Name,"x",IndName)=^oddDEF(ParentClassName,"x",IndName)
-                    s IndNameSub=""
-                    for  {
-                       s IndNameSub=$o(^oddDEF(ParentClassName,"x",IndName,IndNameSub))
-                       q:IndNameSub=""
-                       s ^oddDEF(ttNew.Name,"x",IndName,IndNameSub)=^oddDEF(ParentClassName,"x",IndName,IndNameSub)
-                       }
-                       if $d(^oddDEF(ParentClassName,"x",IndName,21)) {
-                          for ind=1:1:^oddDEF(ParentClassName,"x",IndName,21) {
-                             s ^oddDEF(ttNew.Name,"x",IndName,21,ind)=^oddDEF(ParentClassName,"x",IndName,21,ind)
-                          }
-                        }
-                  }
-             }
-             if $d(^oddDEF(ParentClassName,"p"))  {
-                 s IndName=""
-                 for  {
-                    s IndName=$o(^oddDEF(ParentClassName,"p",IndName))
-                    q:IndName=""
-                    continue:IndName="Super"
-                    continue:IndName="Descript"
-                    continue:IndName="Name"
-                    s ^oddDEF(ttNew.Name,"p",IndName)=^oddDEF(ParentClassName,"p",IndName)
-                    s IndNameSub=""
-                    for  {
-                       s IndNameSub=$o(^oddDEF(ParentClassName,"p",IndName,IndNameSub))
-                       q:IndNameSub=""
-                       s ^oddDEF(ttNew.Name,"x",IndName,IndNameSub)=^oddDEF(ParentClassName,"x",IndName,IndNameSub)
-                    }
-                  }
-             }                                     
-             if $d(^oddDEF(ParentClassName,"a"))  {
-                 s IndName=""
-                 for  {
-                    s IndName=$o(^oddDEF(ParentClassName,"a",IndName))
-                    q:IndName=""
-                    s ^oddDEF(ttNew.Name,"a",IndName)=^oddDEF(ParentClassName,"a",IndName)
-                    s IndNameSub=""
-                    for  {
-                       s IndNameSub=$o(^oddDEF(ParentClassName,"a",IndName,IndNameSub))
-                       q:IndNameSub=""
-                       s ^oddDEF(ttNew.Name,"a",IndName,IndNameSub)=^oddDEF(ParentClassName,"a",IndName,IndNameSub)
-                    }
-                  }
-             }                                     
-             d ttNew.%Save()
-             s ttNew.Description=$replace(ttNew.Description,"##this",ttNew.Name_".cls")
-             d ttNew.%Save()
-             d $System.OBJ.CompileList(ttNew.Name,"cuk /checkuptodate=expandedonly")
-             q ttNew.Name
-   }
-   q "Error: Класс с таким именем уже существует "
 ]]></Implementation>
 </Method>
 
@@ -2516,9 +1749,6 @@ s isForm=##class(%%Library.SMProject).IsParentClass("%s","%s")</Description>
 </Value>
 <Value name="24">
 <Value>PicturesDeleted</Value>
-</Value>
-<Value name="25">
-<Value>Description</Value>
 </Value>
 </Data>
 </Storage>
@@ -41463,7 +40693,7 @@ Method for setting 'WindowState' property.
 The base class for all SMWrap screen forms.
 </Description>
 <ClassType>serial</ClassType>
-<IncludeCode>%ZConst</IncludeCode>
+<IncludeCode>%Const</IncludeCode>
 <ProcedureBlock>0</ProcedureBlock>
 <StorageStrategy>Default</StorageStrategy>
 <Super>%SerialObject</Super>
@@ -85045,28 +84275,6 @@ Method for setting 'ZoomText' property.
 </Class>
 
 
-<Class name="%Library.TMWebFormClass">
-<Super>%CSP.Page</Super>
-<TimeCreated>64526,70083.408039</TimeCreated>
-
-<Method name="OnPage">
-<ClassMethod>1</ClassMethod>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[  q $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="OnPreHTTP">
-<ClassMethod>1</ClassMethod>
-<ReturnType>%Library.Boolean</ReturnType>
-<Implementation><![CDATA[
-  Do %response.SetHeader("Content-Type","text/html")   
-  q 1
-]]></Implementation>
-</Method>
-</Class>
-
-
 <Class name="%Library.TMWinControl">
 <Description>
 The base class for all windowed (able to have focus) controls.
@@ -86438,766 +85646,6 @@ Method for setting 'WheelAccumulator' property.
 </Class>
 
 
-<Routine name="%ZConst" type="INC"><![CDATA[
- ; Color constants (Some duplications)  using RGB color scheme.  Three byte constant, each byte value range 0-FF.  First byte is Blue value, second is Green value third is Red value.
- ; These bytes are swapped by the $ZH function to give RGB.  The total number of available colors is 16777216. (Depending on display settings)
-#define clBlack $ZH("000000")
-#define clMaroon $ZH("000080")
-#define clGreen $ZH("008000")
-#define clLtGreen $ZH("C0FFC0")
-#define clMedGreen $ZH("80FF80")
-#define clOlive $ZH("008080")
-#define clNavy $ZH("800000")
-#define clPurple $ZH("800080")
-#define clTeal $ZH("808000")
-#define clGray $ZH("808080") 
-#define clSilver $ZH("C0C0C0")
-#define clRed $ZH("0000FF")
-#define clMedRed $ZH("8080FF")
-#define clLtRed $ZH("C0C0FF")
-#define clOrange $ZH("0080FF")
-#define clMedOrange $ZH("80C0FF")
-#define clLtOrange $ZH("C0E0FF")
-#define clLime $ZH("00FF00")
-#define clYellow $ZH("00FFFF")
-#define clMedYellow $ZH("80FFFF")
-#define clLtYellow $ZH("C0FFFF")
-#define clBlue $ZH("FF0000")
-#define clMedBlue $ZH("FF8080")
-#define clLtBlue $ZH("FFC0C0")
-#define clFuchsia $ZH("FF00FF")
-#define clPink $ZH("FF00FF")
-#define clMedPink $ZH("FF80FF")
-#define clLtPink $ZH("FFC0FF")
-#define clAqua $ZH("FFFF00")
-#define clMedAqua $ZH("FFFF80")
-#define clLtAqua $ZH("FFC0C0")
-#define clLtGray $ZH("C0C0C0")
-#define clDkGray $ZH("808080")
-#define clFocus $ZH("8080FF")
-#define clWhite $ZH("FFFFFF")
-#define clNone $ZH("1FFFFFFF")
-#define clDefault $ZH("20000000")
- 
-#define clScrollBar -2147483648
-#define clBackground -2147483647
-#define clActiveCaption -2147483646
-#define clInactiveCaption -2147483645
-#define clMenu -2147483644
-#define clWindow -2147483643
-#define clWindowFrame -2147483642
-#define clMenuText -2147483641
-#define clWindowText -2147483640
-#define clCaptionText -2147483639
-#define clActiveBorder -2147483638
-#define clInactiveBorder -2147483637
-#define clAppWorkSpace -2147483636
-#define clHighlight -2147483635
-#define clHighlightText -2147483634
-#define clBtnFace -2147483633
-#define clBtnShadow -2147483632 
-#define clGrayText -2147483631
-#define clBtnText -2147483630
-#define clInactiveCaptionText -2147483629
-#define clBtnHighlight -2147483628
-#define cl3DDkShadow -2147483627
-#define cl3DLight -2147483626
-#define clInfoText -2147483625
-#define clInfoBk -2147483624
- 
- ;CHARSETS constants
-#define ANSICHARSET     0
- ;       ANSI characters. 
-#define DEFAULTCHARSET  1
- ;       Font is chosen based solely on Name and Size. If the described font is not available on the system, Windows will substitute another font.
-#define SYMBOLCHARSET   2       
- ;       Standard symbol set.
-#define MACCHARSET      77
- ;       Macintosh characters. Not available on NT 3.51.
-#define SHIFTJISCHARSET 128
- ;       Japanese shift-jis characters.
-#define HANGEULCHARSET  129
- ;       Korean characters (Wansung).
-#define JOHABCHARSET    130
- ;       Korean characters (Johab). Not available on NT 3.51
-#define GB2312CHARSET   134
- ;       Simplified Chinese characters (mainland china).
-#define CHINESEBIG5CHARSET      136
- ;       Traditional Chinese characters (taiwanese).
-#define GREEKCHARSET    161
- ;       Greek characters. Not available on NT 3.51.
-#define TURKISHCHARSET  162
- ;       Turkish characters. Not available on NT 3.51
-#define VIETNAMESECHARSET       163
- ;       Vietnamese characters. Not available on NT 3.51.
-#define HEBREWCHARSET   177
- ;       Hebrew characters. Not available on NT 3.51
-#define ARABICCHARSET   178
- ;       Arabic characters. Not available on NT 3.51
-#define BALTICCHARSET   186
- ;       Baltic characters. Not available on NT 3.51.
-#define RUSSIANCHARSET  204
- ;       Cyrillic characters. Not available on NT 3.51.
-#define THAICHARSET     222
- ;       Thai characters. Not available on NT 3.51
-#define EASTEUROPECHARSET       238
- ;       Includes diacritical marks for eastern european countries. Not available on NT 3.51.
-#define OEMCHARSET      255
- ;       Depends on the codepage of the operating system.
-#define crDefault 0
-#define crNone    -1
-#define crArrow   -2
-#define crCross   -3
-#define crIBeam   -4
-#define crSize     -22
-#define crSizeNESW -6
-#define crSizeNS   -7
-#define crSizeNWSE -8
-#define crSizeWE   -9
-#define crUpArrow  -10
-#define crHourGlass -11
-#define crDrag     -12
-#define crNoDrop   -13
-#define crHSplit   -14
-#define crVSplit   -15
-#define crMultiDrag -16
-#define crSQLWait   -17
-#define crNo        -18
-#define crAppStart  -19
-#define crHelp      -20
-#define crHandPoint -21
-#define crSizeAll   -22
- 
-#define ETOOPAQUE         2
-#define ETOCLIPPED        4
-#define ETOGLYPHINDEX    $ZH("10")
-#define ETORTLREADING     $ZH("80")
-#define ETONUMERICSLOCAL  $ZH("400")
-#define ETONUMERICSLATIN  $ZH("800")
-#define ETOIGNORELANGUAGE $ZH("1000")
-#define ETOPDY            $ZH("2000")
- 
- ; %TMApplication.MessageBox() flags
-#define MBOK $ZH("00000000")
-#define MBOKCANCEL $ZH("00000001")
-#define MBABORTRETRYIGNORE $ZH("00000002")
-#define MBYESNOCANCEL $ZH("00000003")
-#define MBYESNO $ZH("00000004")
-#define MBRETRYCANCEL $ZH("00000005")
- 
-#define MBICONHAND $ZH("00000010")
-#define MBICONQUESTION $ZH("00000020")
-#define MBICONEXCLAMATION $ZH("00000030")
-#define MBICONASTERISK $ZH("00000040")
-#define MBUSERICON $ZH("00000080")
-#define MBICONWARNING $ZH("00000030")
-#define MBICONERROR $ZH("00000010")
-#define MBICONINFORMATION $ZH("00000040")
-#define MBICONSTOP $ZH("00000010")
- 
-#define MBDEFBUTTON1 $ZH("00000000")
-#define MBDEFBUTTON2 $ZH("00000100")
-#define MBDEFBUTTON3 $ZH("00000200")
-#define MBDEFBUTTON4 $ZH("00000300")
- 
-#define MBAPPLMODAL $ZH("00000000")
-#define MBSYSTEMMODAL $ZH("00001000")
-#define MBTASKMODAL $ZH("00002000")
-#define MBHELP $ZH("00004000")                         
- 
-#define MBNOFOCUS $ZH("00008000")
-#define MBSETFOREGROUND $ZH("00010000")
-#define MBDEFAULTDESKTOPONLY $ZH("00020000")
- 
-#define MBTOPMOST $ZH("00040000")
-#define MBRIGHT $ZH("00080000")
-#define MBRTLREADING $ZH("00100000")
- 
-#define MBSERVICENOTIFICATION $ZH("00200000")
-#define MBSERVICENOTIFICATIONNT3X $ZH("00040000")
- 
-#define MBTYPEMASK $ZH("0000000F")
-#define MBICONMASK $ZH("000000F0")
-#define MBDEFMASK $ZH("00000F00")
-#define MBMODEMASK $ZH("00003000")
-#define MBMISCMASK $ZH("0000C000")
- 
- ;const  { Dialog Box Command IDs }
-#define IDOK 1
-#define IDCANCEL 2
-#define IDABORT 3
-#define IDRETRY 4
-#define IDIGNORE 5
-#define IDYES 6
-#define IDNO 7
-#define IDCLOSE 8
-#define IDHELP 9
- 
- ;const  { ModalResult IDs }        
-#define mrNone 0
-#define mrOk 1
-#define mrCancel 2
-#define mrAbort 3
-#define mrRetry 4
-#define mrIgnore 5
-#define mrYes 6
-#define mrNo 7
-#define mrAll 8
-#define mrNoToAll 9
-#define mrYesToAll 10
- 
-#define fmCreate         $ZH("FFFF")
-#define fmOpenRead       $ZH("0000")
-#define fmOpenWrite      $ZH("0001")
-#define fmOpenReadWrite  $ZH("0002")
-#define fmShareCompat    $ZH("0000")
-#define fmShareExclusive $ZH("0010")
-#define fmShareDenyWrite $ZH("0020")
-#define fmShareDenyRead  $ZH("0030")
-#define fmShareDenyNone  $ZH("0040")
- 
-#define faReadOnly       $ZH("00000001")
-#define faHidden         $ZH("00000002")
-#define faSysFile        $ZH("00000004")
-#define faVolumeID       $ZH("00000008")
-#define faDirectory      $ZH("00000010")
-#define faArchive        $ZH("00000020")
-#define faAnyFile        $ZH("0000003F")
- 
- ; declare OLE Automation constants
-#define varEmpty        $ZH("0000")
-#define varNull         $ZH("0001")
-#define varSmallint     $ZH("0002")
-#define varInteger      $ZH("0003")
-#define varSingle       $ZH("0004")
-#define varDouble       $ZH("0005")
-#define varCurrency     $ZH("0006")
-#define varDate         $ZH("0007")
-#define varOleStr       $ZH("0008")
-#define varDispatch     $ZH("0009")
-#define varError        $ZH("000A")
-#define varBoolean      $ZH("000B")
-#define varVariant      $ZH("000C")
-#define varUnknown      $ZH("000D")
-#define varByte         $ZH("0011")
-#define varString       $ZH("0100")
-#define varTypeMask     $ZH("0FFF")
-#define varArray        $ZH("2000")
-#define varByRef        $ZH("4000")
- 
- ; declare SMWrap component's constants
-#define sbHorizontal   "sbHorizontal"
-#define sbVertical   "sbVertical"
-#define trHorizontal   "trHorizontal"
-#define trVertical   "trVertical"
-#define tmBottomRight   "tmBottomRight"
-#define tmTopLeft   "tmTopLeft"
-#define tmBoth   "tmBoth"
-#define tsNone   "tsNone"
-#define tsAuto   "tsAuto"
-#define tsManual   "tsManual"
-#define scLineUp   "scLineUp"
-#define scLineDown   "scLineDown"
-#define scPageUp   "scPageUp"
-#define scPageDown   "scPageDown"
-#define scPosition   "scPosition"
-#define scTrack   "scTrack"
-#define scTop   "scTop"
-#define scBottom   "scBottom"
-#define scEndScroll   "scEndScroll"
-#define bsBox   "bsBox"
-#define bsFrame   "bsFrame"
-#define bsTopLine   "bsTopLine"
-#define bsBottomLine   "bsBottomLine"
-#define bsLeftLine   "bsLeftLine"
-#define bsRightLine   "bsRightLine"
-#define bsSpacer   "bsSpacer"
-#define bsLowered   "bsLowered"
-#define bsRaised   "bsRaised"
-#define bsSolid   "bsSolid"
-#define bsClear   "bsClear"
-#define bsHorizontal   "bsHorizontal"
-#define bsVertical   "bsVertical"
-#define bsFDiagonal   "bsFDiagonal"
-#define bsCross   "bsCross"
-#define bsDiagCross   "bsDiagCross"
-#define taLeftJustify   "taLeftJustify"
-#define taRightJustify   "taRightJustify"
-#define taCenter   "taCenter"
-#define csRead   "csRead"
-#define csWrite   "csWrite"
-#define ctString   "ctString"
-#define ctInteger   "ctInteger"
-#define ctDouble   "ctDouble"
-#define ctDate   "ctDate"
-#define ctCurrency   "ctCurrency"
-#define ieSimple   "ieSimple"
-#define ieEllipsis   "ieEllipsis"
-#define iePickList   "iePickList"
-#define gdSelected   "gdSelected"
-#define gdFocused   "gdFocused"
-#define gdFixed   "gdFixed"
-#define goFixedVertLine   "goFixedVertLine"
-#define goFixedHorzLine   "goFixedHorzLine"
-#define goVertLine   "goVertLine"
-#define goHorzLine   "goHorzLine"
-#define goRangeSelect   "goRangeSelect"
-#define goDrawFocusSelected   "goDrawFocusSelected"
-#define goRowSizing   "goRowSizing"
-#define goColSizing   "goColSizing"
-#define goRowMoving   "goRowMoving"
-#define goColMoving   "goColMoving"
-#define goEditing   "goEditing"
-#define goTabs   "goTabs"
-#define goRowSelect   "goRowSelect"
-#define goAlwaysShowEditor   "goAlwaysShowEditor"
-#define goThumbTracking   "goThumbTracking"
-#define ssNone   "ssNone"
-#define ssHorizontal   "ssHorizontal"
-#define ssVertical   "ssVertical"
-#define ssBoth   "ssBoth"
-#define cbUnchecked   "cbUnchecked"
-#define cbChecked   "cbChecked"
-#define cbGrayed   "cbGrayed"
-#define ecNormal   "ecNormal"
-#define ecUpperCase   "ecUpperCase"
-#define ecLowerCase   "ecLowerCase"
-#define csDropDown   "csDropDown"
-#define csSimple   "csSimple"
-#define csDropDownList   "csDropDownList"
-#define csOwnerDrawFixed   "csOwnerDrawFixed"
-#define csOwnerDrawVariable   "csOwnerDrawVariable"
-#define odSelected   "odSelected"
-#define odGrayed   "odGrayed"
-#define odDisabled   "odDisabled"
-#define odChecked   "odChecked"
-#define odFocused   "odFocused"
-#define htAbove   "htAbove"
-#define htNowhere   "htNowhere"
-#define htBelow   "htBelow"
-#define htOnItem   "htOnItem"
-#define htOnButton   "htOnButton"
-#define htOnIcon   "htOnIcon"
-#define htOnIndent   "htOnIndent"
-#define htOnLabel   "htOnLabel"
-#define htOnRight   "htOnRight"
-#define htOnStateIcon   "htOnStateIcon"
-#define htToLeft   "htToLeft"
-#define htToRight   "htToRight"
-#define cdsSelected   "cdsSelected"
-#define cdsGrayed   "cdsGrayed"
-#define cdsDisabled   "cdsDisabled"
-#define cdsChecked   "cdsChecked"
-#define cdsFocused   "cdsFocused"
-#define cdsDefault   "cdsDefault"
-#define cdsHot   "cdsHot"
-#define cdsMarked   "cdsMarked"
-#define cdsIndeterminate   "cdsIndeterminate"
-#define isNone   "isNone"
-#define isCut   "isCut"
-#define isDropHilited   "isDropHilited"
-#define isFocused   "isFocused"
-#define isSelected   "isSelected"
-#define isActivating   "isActivating"
-#define stWholeWord   "stWholeWord"
-#define stMatchCase   "stMatchCase"
-#define csCTS   "csCTS"
-#define csDSR   "csDSR"
-#define csRing   "csRing"
-#define csRLSD   "csRLSD"
-#define fCtlHold   "fCtlHold"
-#define fDsrHold   "fDsrHold"
-#define fRlsHold   "fRlsHold"
-#define fXoffHold   "fXoffHold"
-#define fXOffSent   "fXOffSent"
-#define fEof   "fEof"
-#define fTxim   "fTxim"
-#define ceFrame   "ceFrame"
-#define ceRxParity   "ceRxParity"
-#define ceOverrun   "ceOverrun"
-#define ceBreak   "ceBreak"
-#define ceIO   "ceIO"
-#define ceMode   "ceMode"
-#define ceRxOver   "ceRxOver"
-#define ceTxFull   "ceTxFull"
-#define ssShift   "ssShift"
-#define ssAlt   "ssAlt"
-#define ssCtrl   "ssCtrl"
-#define ssLeft   "ssLeft"
-#define ssRight   "ssRight"
-#define ssMiddle   "ssMiddle"
-#define ssDouble   "ssDouble"
-#define mbLeft   "mbLeft"
-#define mbRight   "mbRight"
-#define mbMiddle   "mbMiddle"
-#define dsDragEnter   "dsDragEnter"
-#define dsDragLeave   "dsDragLeave"
-#define dsDragMove   "dsDragMove"
-#define caNone   "caNone"
-#define caHide   "caHide"
- ; #define caFree   "caFree"
-#define caMinimize   "caMinimize"
-#define fsSurface   "fsSurface"
-#define fsBorder   "fsBorder"
-#define psStarting   "psStarting"
-#define psRunning   "psRunning"
-#define psEnding   "psEnding"
-#define okWrite   "okWrite"
-#define okRead   "okRead"
-#define dtrDisable   "dtrDisable"
-#define dtrEnable   "dtrEnable"
-#define dtrHandshake   "dtrHandshake"
-#define rtsDisable   "rtsDisable"
-#define rtsEnable   "rtsEnable"
-#define rtsHandshake   "rtsHandshake"
-#define rtsToggle   "rtsToggle"
-#define fcHardware   "fcHardware"
-#define fcSoftware   "fcSoftware"
-#define fcNone   "fcNone"
-#define fcCustom   "fcCustom"
-#define prNone   "prNone"
-#define prOdd   "prOdd"
-#define prEven   "prEven"
-#define prMark   "prMark"
-#define prSpace   "prSpace"
-#define brCustom   "brCustom"
-#define br110   "br110"
-#define br300   "br300"
-#define br600   "br600"
-#define br1200   "br1200"
-#define br2400   "br2400"
-#define br4800   "br4800"
-#define br9600   "br9600"
-#define br14400   "br14400"
-#define br19200   "br19200"
-#define br38400   "br38400"
-#define br56000   "br56000"
-#define br57600   "br57600"
-#define br115200   "br115200"
-#define br128000   "br128000"
-#define br256000   "br256000"
-#define dbFive   "dbFive"
-#define dbSix   "dbSix"
-#define dbSeven   "dbSeven"
-#define dbEight   "dbEight"
-#define smThreadSync   "smThreadSync"
-#define smWindowSync   "smWindowSync"
-#define smNone   "smNone"
-#define evRxChar   "evRxChar"
-#define evTxEmpty   "evTxEmpty"
-#define evRxFlag   "evRxFlag"
-#define evRing   "evRing"
-#define evBreak   "evBreak"
-#define evCTS   "evCTS"
-#define evDSR   "evDSR"
-#define evError   "evError"
-#define evRLSD   "evRLSD"
-#define evRx80Full   "evRx80Full"
-#define dmManual   "dmManual"
-#define dmAutomatic   "dmAutomatic"
-#define dkDrag   "dkDrag"
-#define dkDock   "dkDock"
-#define akLeft   "akLeft"
-#define akTop   "akTop"
-#define akRight   "akRight"
-#define akBottom   "akBottom"
-#define alNone   "alNone"
-#define alTop   "alTop"
-#define alBottom   "alBottom"
-#define alLeft   "alLeft"
-#define alRight   "alRight"
-#define alClient   "alClient"
-#define doNoOrient   "doNoOrient"
-#define doHorizontal   "doHorizontal"
-#define doVertical   "doVertical"
-#define beLeft   "beLeft"
-#define beTop   "beTop"
-#define beRight   "beRight"
-#define beBottom   "beBottom"
-#define bvNone   "bvNone"
-#define bvLowered   "bvLowered"
-#define bvRaised   "bvRaised"
-#define bvSpace   "bvSpace"
-#define bkNone   "bkNone"
-#define bkTile   "bkTile"
-#define bkSoft   "bkSoft"
-#define bkFlat   "bkFlat"
-#define ftUnknown   "ftUnknown"
-#define ftString   "ftString"
-#define ftSmallint   "ftSmallint"
-#define ftInteger   "ftInteger"
-#define ftWord   "ftWord"
-#define ftBoolean   "ftBoolean"
-#define ftFloat   "ftFloat"
-#define ftCurrency   "ftCurrency"
-#define ftBCD   "ftBCD"
-#define ftDate   "ftDate"
-#define ftTime   "ftTime"
-#define ftDateTime   "ftDateTime"
-#define ftBytes   "ftBytes"
-#define ftVarBytes   "ftVarBytes"
-#define ftAutoInc   "ftAutoInc"
-#define ftBlob   "ftBlob"
-#define ftMemo   "ftMemo"
-#define tGraphic   "tGraphic"
-#define ftFmtMemo   "ftFmtMemo"
-#define ftParadoxOle   "ftParadoxOle"
-#define ftDBaseOle   "ftDBaseOle"
-#define ftTypedBinary   "ftTypedBinary"
-#define ftCursor   "ftCursor"
-#define ftFixedChar   "ftFixedChar"
-#define ftWideString   "ftWideString"
-#define ftLargeint   "ftLargeint"
-#define ftADT   "ftADT"
-#define ftArray   "ftArray"
-#define ftReference   "ftReference"
-#define ftDataSet   "ftDataSet"
-#define csPopup   "csPopup"
-#define csDialog   "csDialog"
-#define gkCustom   "gkCustom"
-#define gkDefault   "gkDefault"
-#define gkDropDown   "gkDropDown"
-#define gkEllipsis   "gkEllipsis"
-#define epaRight   "epaRight"
-#define epaLeft   "epaLeft"
-#define Sun   "Sun"
-#define Mon   "Mon"
-#define Tue   "Tue"
-#define Wed   "Wed"
-#define Fri   "Fri"
-#define Sat   "Sat"
-#define dyDefault   "dyDefault"
-#define dyFour   "dyFour"
-#define dyTwo   "dyTwo"
-#define fdAnsiOnly   "fdAnsiOnly"
-#define fdTrueTypeOnly   "fdTrueTypeOnly"
-#define fdEffects   "fdEffects"
-#define fdFixedPitchOnly   "fdFixedPitchOnly"
-#define fdForceFontExist   "fdForceFontExist"
-#define fdNoFaceSel   "fdNoFaceSel"
-#define fdNoOEMFonts   "fdNoOEMFonts"
-#define fdNoSimulations   "fdNoSimulations"
-#define fdNoSizeSel   "fdNoSizeSel"
-#define dNoStyleSel   "dNoStyleSel"
-#define fdNoVectorFonts   "fdNoVectorFonts"
-#define fdShowHelp   "fdShowHelp"
-#define fdWysiwyg   "fdWysiwyg"
-#define fdLimitSize   "fdLimitSize"
-#define fdScalableOnly   "fdScalableOnly"
-#define fdApplyButton   "fdApplyButton"
-#define cdFullOpen   "cdFullOpen"
-#define cdPreventFullOpen   "cdPreventFullOpen"
-#define cdShowHelp   "cdShowHelp"
-#define cdSolidColor   "cdSolidColor"
-#define cdAnyColor   "cdAnyColor"
-#define bsNone   "bsNone"
-#define bsSingle   "bsSingle"
-#define bsSizeable   "bsSizeable"
-#define bsDialog   "bsDialog"
-#define bsToolWindow   "bsToolWindow"
-#define bsSizeToolWin   "bsSizeToolWin"
-#define fsEdit   "fsEdit"
-#define fsComboBox   "fsComboBox"
-#define ofReadOnly   "ofReadOnly"
-#define ofOverwritePrompt   "ofOverwritePrompt"
-#define ofHideReadOnly   "ofHideReadOnly"
-#define ofNoChangeDir   "ofNoChangeDir"
-#define ofShowHelp   "ofShowHelp"
-#define ofNoValidate   "ofNoValidate"
-#define ofAllowMultiSelect   "ofAllowMultiSelect"
-#define ofExtensionDifferent   "ofExtensionDifferent"
-#define fPathMustExist   "fPathMustExist"
-#define ofFileMustExist   "ofFileMustExist"
-#define ofCreatePrompt   "ofCreatePrompt"
-#define ofShareAware   "ofShareAware"
-#define ofNoReadOnlyReturn   "ofNoReadOnlyReturn"
-#define ofNoTestFileCreate   "ofNoTestFileCreate"
-#define ofNoNetworkButton   "ofNoNetworkButton"
-#define ofNoLongNames   "ofNoLongNames"
-#define ofOldStyleDialog   "ofOldStyleDialog"
-#define ofNoDereferenceLinks   "ofNoDereferenceLinks"
-#define ofEnableIncludeNotify   "ofEnableIncludeNotify"
-#define ofEnableSizing   "ofEnableSizing"
-#define fsBold   "fsBold"
-#define fsItalic   "fsItalic"
-#define fsUnderline   "fsUnderline"
-#define fsStrikeOut   "fsStrikeOut"
-#define fpDefault   "fpDefault"
-#define fpVariable   "fpVariable"
-#define fpFixed   "fpFixed"
-#define fsNormal   "fsNormal"
-#define fsMDIChild   "fsMDIChild"
-#define fsMDIForm   "fsMDIForm"
-#define fsStayOnTop   "fsStayOnTop"
-#define poDesigned   "poDesigned"
-#define poDefault   "poDefault"
-#define poDefaultPosOnly   "poDefaultPosOnly"
-#define poDefaultSizeOnly   "poDefaultSizeOnly"
-#define poScreenCenter   "poScreenCenter"
-#define poDesktopCenter   "poDesktopCenter"
-#define poNone   "poNone"
-#define poProportional   "poProportional"
-#define poPrintToFit   "poPrintToFit"
-#define wsNormal   "wsNormal"
-#define wsMinimized   "wsMinimized"
-#define wsMaximized   "wsMaximized"
-#define biSystemMenu   "biSystemMenu"
-#define biMinimize   "biMinimize"
-#define biMaximize   "biMaximize"
-#define biHelp   "biHelp"
-#define tbHorizontal   "tbHorizontal"
-#define tbVertical   "tbVertical"
-#define dsNormal   "dsNormal"
-#define dsTransparent   "dsTransparent"
-#define itImage   "itImage"
-#define itMask   "itMask"
-#define tlTop   "tlTop"
-#define tlCenter   "tlCenter"
-#define tlBottom   "tlBottom"
-#define lbStandard   "lbStandard"
-#define lbOwnerDrawFixed   "lbOwnerDrawFixed"
-#define lbOwnerDrawVariable   "lbOwnerDrawVariable"
-#define iaTop   "iaTop"
-#define iaLeft   "iaLeft"
-#define sdLeft   "sdLeft"
-#define sdRight   "sdRight"
-#define sdAbove   "sdAbove"
-#define sdBelow   "sdBelow"
-#define sdAll   "sdAll"
-#define htHandPoint   "htHandPoint"
-#define htUnderlineCold   "htUnderlineCold"
-#define htUnderlineHot   "htUnderlineHot"
-#define drBounds   "drBounds"
-#define drIcon   "drIcon"
-#define drLabel   "drLabel"
-#define drSelectBounds   "drSelectBounds"
-#define ctText   "ctText"
-#define ctImage   "ctImage"
-#define ctState   "ctState"
-#define arAlignBottom   "arAlignBottom"
-#define arAlignLeft   "arAlignLeft"
-#define arAlignRight   "arAlignRight"
-#define arAlignTop   "arAlignTop"
-#define arDefault   "arDefault"
-#define arSnapToGrid   "arSnapToGrid"
-#define mbNone   "mbNone"
-#define mbBreak   "mbBreak"
-#define mbBarBreak   "mbBarBreak"
-#define paCenter   "paCenter"
-#define aaManual   "aaManual"
-#define aaGetFocus   "aaGetFocus"
-#define aaDoubleClick   "aaDoubleClick"
-#define smClip   "smClip"
-#define smCenter   "smCenter"
-#define smScale   "smScale"
-#define smStretch   "smStretch"
-#define smAutoSize   "smAutoSize"
-#define osEmpty   "osEmpty"
-#define osLoaded   "osLoaded"
-#define osRunning   "osRunning"
-#define osOpen   "osOpen"
-#define osInPlaceActive   "osInPlaceActive"
-#define osUIActive   "osUIActive"
-#define pcCopies   "pcCopies"
-#define pcOrientation   "pcOrientation"
-#define pcCollation   "pcCollation"
-#define poPortrait   "poPortrait"
-#define poLandscape   "poLandscape"
-#define nsNone   "nsNone"
-#define nsBullet   "nsBullet"
-#define caBold   "caBold"
-#define caColor   "caColor"
-#define caFace   "caFace"
-#define caItalic   "caItalic"
-#define caSize   "caSize"
-#define caStrikeOut   "caStrikeOut"
-#define caUnderline   "caUnderline"
-#define caProtected   "caProtected"
-#define ssRegular   "ssRegular"
-#define ssFlat   "ssFlat"
-#define ssHotTrack   "ssHotTrack"
-#define dmBoth   "dmBoth"
-#define dmGlyphOnly   "dmGlyphOnly"
-#define dmTextOnly   "dmTextOnly"
-#define blGlyphLeft   "blGlyphLeft"
-#define blGlyphRight   "blGlyphRight"
-#define blGlyphTop   "blGlyphTop"
-#define blGlyphBottom   "blGlyphBottom"
-#define rsNone   "rsNone"
-#define rsLine   "rsLine"
-#define rsUpdate   "rsUpdate"
-#define rsPattern   "rsPattern"
-#define sptNormal   "sptNormal"
-#define sptCapsLock   "sptCapsLock"
-#define sptNumLock   "sptNumLock"
-#define sptScrollLock   "sptScrollLock"
-#define sptDate   "sptDate"
-#define sptTime   "sptTime"
-#define sptDateTime   "sptDateTime"
-#define sptEllipsisText   "sptEllipsisText"
-#define sptEllipsisPath   "sptEllipsisPath"
-#define sptGlyph   "sptGlyph"
-#define sptGauge   "sptGauge"
-#define sptOwnerDraw   "sptOwnerDraw"
-#define tpTop   "tpTop"
-#define tpBottom   "tpBottom"
-#define tpLeft   "tpLeft"
-#define tpRight   "tpRight"
-#define tsTabs   "tsTabs"
-#define tsButtons   "tsButtons"
-#define tsFlatButtons   "tsFlatButtons"
-#define blTop   "blTop"
-#define blBottom   "blBottom"
-#define blLeft   "blLeft"
-#define blRight   "blRight"
-#define dpTop   "dpTop"
-#define dpBottom   "dpBottom"
-#define dpLeft   "dpLeft"
-#define dpRight   "dpRight"
-#define dmCanFloat   "dmCanFloat"
-#define dmCannotFloat   "dmCannotFloat"
-#define dmCannotFloatOrChangeDocks   "dmCannotFloatOrChangeDocks"
-#define dhDouble   "dhDouble"
-#define dhNone   "dhNone"
-#define dhSingle   "dhSingle"
-#define stNone   "stNone"
-#define stData   "stData"
-#define stText   "stText"
-#define stBoth   "stBoth"
-#define naAdd   "naAdd"
-#define naAddFirst   "naAddFirst"
-#define naAddChild   "naAddChild"
-#define naAddChildFirst   "naAddChildFirst"
-#define naInsert   "naInsert"
-#define sbOneStopBit   "sbOneStopBit"
-#define sbOne5StopBits   "sbOne5StopBits"
-#define sbTwoStopBits   "sbTwoStopBits"
-#define SMWOREF(%s)   ##class(%TMPersistent).GetObjOref(+%s)
- 
-#define STARTBINDING  ##continue
- n SMWCStr,SMWCLParentAddress,SMWCIndex  ##continue
- s SMWCStr="",SMWCIndex=1 ##continue
- s SMWCLParentAddress=$s(initvalue="":0,1:$lg(initvalue,2,0))
- 
-#define CREATECONTROL(%classname,%controlname,%parentname,%parentaddress,%createcontrol)   ##continue
-#if %createcontrol=1    ##continue
- s %controlname=##class(%classname).%New("") ##continue
-#endif ##continue
- s:($l($g(SMWCStr(SMWCIndex)))>=32000) SMWCIndex=$I(SMWCIndex) ##continue
- s SMWCStr(SMWCIndex)=$g(SMWCStr(SMWCIndex))_##class(%TMPersistent).CreateControl(%controlname,%parentname,%parentaddress)
- 
-#define FINISHBINDING  ##continue
- n i,k,SMWCCommand,SMWCClearList,SMWCControl    ##continue
- f k=1:1:SMWCIndex d    ##continue
- . s SMWCClearList=(k=1) ##continue
- . s SMWCCommand=$$CallBack^%ZMRASD($lb("cac",SMWCClearList,SMWCStr(k)))  ##continue
- . f i=1:3:$ll(SMWCCommand) d  ##continue
- . . s SMWCControl=##class(%TMPersistent).GetObjOref($lg(SMWCCommand,i))  ##continue
- . . d SMWCControl.Bind($lg(SMWCCommand,i+1,0),$lg(SMWCCommand,i+2,0))
- 
-]]></Routine>
-
-
 <Routine name="%ZGLEXIM" type="MAC" languagemode="0"><![CDATA[
  ; Export/Import/List globals in file or ^BLOB without dialog
 #define Marker  77777
@@ -87460,32 +85908,7 @@ Daemon(p,ijc,key,UserLN,SESID)
  . d IOStore^$$$SMGR($$$SES)
  . s $$$AS($$$SES,"InsRut")=$$$InsRut
  s $$$CRT=$$$TM,$$$C=""
-   ; Параметры авторизации
-      s I=$ZU(111,0), ip=$p($A(I,1)_"."_$A(I,2)_"."_$A(I,3)_"."_$A(I,4)_"_"_($A(I,5)*256+$A(I,6)),":",1)
-      if $d(^%ZSysUser(ip)) s %sysuser=^%ZSysUser(ip)  k ^%ZSysUser(ip)
-   ; ---------------------  
-   ; создать сесию
-      s ^||ipKey($job)="SMWrap@"_$p(ip,":",1)
-      if ##class(%CSP.Session).%ExistsId(^||ipKey($job))=1   s %session=##class(%CSP.Session).%OpenId(^||ipKey($job))
-      else                                                   s %session=##class(%CSP.Session).%New(^||ipKey($job))
-      s %session.ProcessId=$job
-      S %session.AppTimeout =24*3600
-      ; d %session.Login("_SYSTEM")
-      S %session.Namespace=$ZU(5)
-      d %session.%Save()
-      s $LI(^%cspSession(^||ipKey($job)),15)="SMWrap:"_$job ;  Приложение 
-      s $LI(^%cspSession(^||ipKey($job)),18)=$job        ;  ID процесса
-      d %session.%Save()
-      k ^||ipKey($job)
-   ; ---------------------  
-   ; Чтение команд от клиента
-      f  d ReadCmd q:$$$C=$$$cmdQUIT  d:$D($$$MSGS($$$SES)) GetMsgs
-   ; ---------------------  
-   ; Удаление сесии
-      s I=$ZU(111,0), ip=$p($A(I,1)_"."_$A(I,2)_"."_$A(I,3)_"."_$A(I,4)_"_"_($A(I,5)*256+$A(I,6)),":",1)
-      s ^||ipKey($job)="SMWrap@"_$p(ip,":",1)
-      k ^%cspSession(^||ipKey($job)),^||ipKey($job)
-   ; ---------------------  
+ f  d ReadCmd q:$$$C=$$$cmdQUIT  d:$D($$$MSGS($$$SES)) GetMsgs
 mQuit s $ZT="tBreak"
 DelSes s $$$InsRut=$$$AS($$$SES,"InsRut")
  d Del^$$$SMGR($$$SES)
@@ -87514,6 +85937,15 @@ ReadCmd s $ZT="tBase"
  } 
 ExecCmd 
    s $ZT="tSftFn",$$$ERR=$$$msgOK_":"
+   ; Параметры авторизации
+     s I=$ZU(111,0)
+     s ip=$p($A(I,1)_"."_$A(I,2)_"."_$A(I,3)_"."_$A(I,4)_"_"_($A(I,5)*256+$A(I,6)),":",1)
+     if $d(^%ZSysUser(ip))
+     {
+        s %sysuser=^%ZSysUser(ip)
+        k ^%ZSysUser(ip)
+     }
+   ; ---------------------  
   s tmpRep=$$ReplaceCmd($$$C,$$$P)
   s $$$C=$lg(tmpRep,1)
   s $$$P=$lg(tmpRep,2)
@@ -87624,9 +86056,8 @@ CallBack($$$CBARGCOMMAND,$$$CBARGNOWAIT)
  s:$$$CBNW $$$CBID=-$$$CBID
  w:$D($$$CBARGCOMMAND) $$$msgCALLBACK_$$$CBID_":"_$L($$$CBARGCOMMAND)_$$$cTRM_$$$CBARGCOMMAND
  i $$$CBNW u:$$$CBOIO'=$$$TIO $$$CBOIO k $$$CBID q ""
-  ; Flush TCP buffer and wait for reply or ASD command
- w !
- f  r $$$RD:$$$RTO d  q:'$$$CBID  d:$D($$$MSGS($$$SES)) GetMsgs
+ ; Flush TCP buffer and wait for reply or ASD command
+ w ! f  r $$$RD:$$$RTO d  q:'$$$CBID  d:$D($$$MSGS($$$SES)) GetMsgs
  . q:$$$RD=""
  . s $$$C=$P($$$RD,":"),$$$RL=$P($$$RD,":",2),$$$P=""
  . f  s $$$RLP=$$$RL-$L($$$P) q:$$$RLP'>0  r $$$RD#$$$RLP:$$$RTO s $$$RD=$$$RD_$S($A($K)>127:$K,1:$$$cTRM),$$$P=$$$P_$E($$$RD,1,$$$RLP)
@@ -87752,11 +86183,11 @@ ReplaceCmd(cmd,var)
    ; -----------------------------------------------------------------  
    ; ^%debug(5)="(3244) Запрос=cmd:x###var===N"_$c(1)_"s CClassworanskMain=##class(%Dictionary.ClassDefinition).%New(""wor.nskMain"")"
    ; BackUp file
+   /*
     if $d(^%ZMRBackUp)
     { 
-       if $l($lg(var,1),"=##class(%Dictionary.ClassDefinition).%New(")=2
+       if $l(var,$c(1)_"s CClasswora")=2,$l($p(var,$c(1)_"s CClasswora",2),"=##class(%Dictionary.ClassDefinition).%New(")=2
        {
-           s ^%deb2=var
            s className=$p(var,"=##class(%Dictionary.ClassDefinition).%New(""",2) 
            s className=$p(className,""")",1) 
            s UserName=$lg(%sysuser,1)
@@ -87770,9 +86201,8 @@ ReplaceCmd(cmd,var)
            x ^%ZMRBackUp($job)
            ; d Save^%ZMRBackUp(className,%sysuser)
        }
-       ; ^%debug(152)="(756) Запрос=cmd:x###var===4"_$c(1)_"s CacheConnectClosing=CClassworanskSqlRow.%Close()"
-       ; if $l(var,$c(1)_"s CacheConnectClosing=CClas")=2,$l(var,".%Close()")=2
-       if $lg(var,1)="s CacheConnectClosing=CClassAceEditoraace.%Close()"
+        ; ^%debug(152)="(756) Запрос=cmd:x###var===4"_$c(1)_"s CacheConnectClosing=CClassworanskSqlRow.%Close()"
+       if $l(var,$c(1)_"s CacheConnectClosing=CClas")=2,$l(var,".%Close()")=2
        {
             if $d(^%ZMRBackUp($job))
             {
@@ -87780,6 +86210,7 @@ ReplaceCmd(cmd,var)
             } 
        }
     }
+    */
    q resReplaceCmd
   
   
@@ -87793,40 +86224,6 @@ Log(val)
   s ^%debug1=^%debug1+1,^%debug1(^%debug1)="("_$j_")"_val
   q 
     
-GetClassInfo(ClassName)
-   s res=$LB()
-   ; |     (ColIndex(1)) = "Name"
-   s $LI(res,1)=ClassName
-   ; |     (ColIndex(2)) = "Super"
-   if $d(^oddDEF(ClassName,60)) s $LI(res,2)=^oddDEF(ClassName,60)
-   e                             s $LI(res,2)=""
-   ; |     (ColIndex(3)) = "Hidden"
-   if $d(^oddDEF(ClassName,32)) s $LI(res,3)=^oddDEF(ClassName,32)
-   e                             s $LI(res,3)=0
-   ; |     (ColIndex(4)) = "Datatype" 
-   if $d(^oddDEF(ClassName,23)) s $LI(res,4)=^oddDEF(ClassName,23)
-   e                             s $LI(res,4)=""
-   ; |     (ColIndex(5)) = "System" 
-   if $d(^oddDEF(ClassName,61)) s $LI(res,5)=^oddDEF(ClassName,61)
-   e                             s $LI(res,5)=0
-   ; |     (ColIndex(6)) = "Final"   
-   if $d(^oddDEF(ClassName,7)) s $LI(res,6)=^oddDEF(ClassName,7)
-   e                             s $LI(res,6)=0
-   ; |     (ColIndex(7)) = "Persistent"  
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Persistent" s $li(res,7)=1
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Persistent" s $li(res,7)=0
-   if '$d(^oddDEF(ClassName,23)) s $li(res,7)=0
-   ; |     (ColIndex(8)) = "Serial"     
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)="Serial" s $li(res,8)=1
-   if $d(^oddDEF(ClassName,23)),^oddDEF(ClassName,23)'="Serial" s $li(res,8)=0
-   if '$d(^oddDEF(ClassName,23)) s $li(res,8)=0
-   ; |     (ColIndex(9)) = "TimeChanged"
-   if $d(^oddDEF(ClassName,64)) s $LI(res,9)=^oddDEF(ClassName,64)
-   e                             s $LI(res,9)=$h
-   ; |     (ColIndex(10)) = "SqlTableName"   
-   if $d(^oddDEF(ClassName,58)) s $LI(res,10)=^oddDEF(ClassName,58)
-   e                             s $LI(res,10)=$h
-   q res   
 ]]></Routine>
 
 
@@ -87847,7 +86244,6 @@ CHKUSR(user,pass,nspace,appl)
    s HashPwd=""
    if pass'="" F ix489=1:1:7  S HashPwd=HashPwd_$ZCRC(pass,ix489)
    s ^%ZSysUser(ip)=$LB(user,HashPwd,nspace,appl,ip,$p($h,",",1),$p($h,",",2))
-   q 1
    q $$AuthorTest^%ZMRProgramAuthor(user,pass,nspace,appl)
 ]]></Routine>
 
@@ -87869,7 +86265,6 @@ CHKUSR(user,pass,nspace,appl)
    s HashPwd=""
    if pass'="" F ix489=1:1:7  S HashPwd=HashPwd_$ZCRC(pass,ix489)
    s ^%ZSysUser(ip)=$LB(user,HashPwd,nspace,appl,ip,$p($h,",",1),$p($h,",",2))
-   q 1
    q $$AuthorTest^%ZMRProgramAuthor(user,pass,nspace,appl)
    
 ]]></Routine>
@@ -87903,7 +86298,7 @@ GarbColl
  s l=$L("ZMRINS"),host=$ZCVT($ZU(110),"U")
  s host=$TR(host,$TR(host,"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
  s ns=$ZU(5),nethard=$ZU(68,27)
- f i=1:1:$ZU(90,0) s:$ZU(90,2,0,i)'="" ns($ZU(90,2,0,i))=""
+ f i=1:1:$ZU(90,0) s ns($ZU(90,2,0,i))=""
  s i="" f  s i=$O(ns(i)) q:i=""  d
  . s $ZT="GColErr"
  . d $ZU(68,27,0) zn i s ix="ZMRINS"
@@ -88059,7 +86454,7 @@ PostRead(var, Enum, CLS, SMOpenMode, SMMessage)
  ;  d CONFIG^%ZMRPMD
  ;  RUN d START(60) q
  ; 4240
-RUN(BackUpFile="") 
+RUN ; (BackUpFile="") 
  d HALT^%ZMRPMD  
  h 5
  w "   Доработка для Cache2015 02.09.2016 "_$c(13,10)
@@ -88069,8 +86464,8 @@ RUN(BackUpFile="")
  w "   Если вы так не считаете, то обязаны удалить данный сервер, и больше им не пользоваться"_$c(13,10)
  w "   Продукт распространяется бесплатно. "_$c(13,10)
  w $c(13,10)
- w "   Запуск сервера в режиме разработчика(cоздается BackUp каждый час):"_$c(13,10)
- w "              d RUN^%ZMRPMD(""C:\BackUp\"")"_$c(13,10)
+ ;  w "   Запуск сервера в режиме разработчика(cоздается BackUp каждый час):"_$c(13,10)
+ ;  w "              d RUN^%ZMRPMD(""C:\BackUp\"")"_$c(13,10)
  w "   Запуск сервера в рабочем режиме:"_$c(13,10)
  w "              d RUN^%ZMRPMD"_$c(13,10)
  w "   Запуск режима конфигурации(в терминале) :"_$c(13,10)
@@ -88079,8 +86474,8 @@ RUN(BackUpFile="")
  w $c(13,10)
     k ^%ZMRBackUp
     ; s:BackUpFile="" BackUpFile= $ZUTIL(168)_"BackUp\"
-    if BackUpFile'=""  s ^%ZMRBackUp=BackUpFile
     k ^%SysUser 
+    ; s ^%ZMRBackUp=BackUpFile
     d START^%ZMRPMD(60,"CHKUSR^%ZMRAUTH") q
     q
  
@@ -88177,10 +86572,10 @@ GetLicense(prodname)
  ; $LB(Customer,LicenseNumber,MaxConnects,LicenseKey)
  q $S($G(prodname)="":"",1:$G($$$Ini($$$ieLicNode,prodname)))
  ;
-gs(w) q:w=$$$JOBOK "Сервер уже запущен."
- q:w=$$$JOBFAIL "Невозможно запустить сервер."
- q:w=$$$ALRDRUN $ZN_" Сервер запущен."
- q:w=$$$HALTPROC "Остановка сервера MStudio!"
+gs(w) q:w=$$$JOBOK "Server ZMRPMD is running."
+ q:w=$$$JOBFAIL "Can not start application server."
+ q:w=$$$ALRDRUN $ZN_" is already running."
+ q:w=$$$HALTPROC "All ZMRPMD routines have been halted!"
  q ""
  ;
 Version() q 2003091002
@@ -88200,14 +86595,13 @@ START(to,authprog)
  d ^$$$EVENT(1) ; Perform startup actions
  j Daemon($G(authprog)):():$G(to,10) ; start server
  e  w $$gs($$$JOBFAIL),! q  ; cannot start job
- w "MStudio 1999-2017 "_$c(13,10)
+ w "ZMRPMD Copyright (C) 1999-2003 Makova Soft"_$c(13,10)
  w $$gs($$$JOBOK),!
  q
  ;
 stErr s $ZT="" w "Unknown error while startup",! q
  ;
 HALT n j,port,p,maxp
- 
  s j=0,$$$PORTS(-1)=+$J
  s p=$G($$$Ini($$$ieSrvPort),$$$dfSrvPort)
  s maxp=$G($$$Ini($$$ieMaxAppPort),$$$dfMaxAppPort)
@@ -88238,169 +86632,14 @@ ReadCmd
  ; "MR:cr:"_namespace_":"_$L(listparm)_$C(0)_$LB(username,password,application)
  ; "MR:op:"_SessionID_$C(0)
  ; "MR:bfl:"_SessionID_$C(0)
- 
- 
-  ////////////////////////// Старый вариант \\\\\\\\\\\\\\\\\\\\\\
-  ; s d="",(ap,oasd,csok)=0 r d#255:rto d ParseInp
-  ; i (d<3)!($G(d(1))'=$$$APPTYPE) w $$$errINVALTYPE,$$$cTRM,! ztrap  ; invalid input
-  ; i d(2)=$$$cmdBRKFLW d BrkFlw^$$$SMGR(d(3)) ; set flag to break group read
-  ;  ; start application server
-  ;  i d(2)=$$$cmdCREATE d CreatePP  d Log(key)   d StartASD
-  ;  ;   i d(2)=$$$cmdOPEN   d OpenPP   d StartASD
-  ;  ; start audit
-  ;  i ($$$TM-at)>ato s at=$$$TM j Audit^$$$SMGR:():jto
-  /////////////////////////////////////////////////////////////////
- 
-  s d="",(ap,oasd,csok)=0
-  s isSMWrap=0
-  s isHTML=0
-  s isTerminal=0
-  s tmp=""
-  for   {
-    r ^||sym#1:rto 
-    s tmp=tmp_^||sym	
-    s ^%deb=tmp
-    if tmp="MR:cr"    s isSMWrap=1 q
-    if tmp="GET /"    s isHTML=1 q
-    if tmp="POST /"   s isHTML=1 q
-    if $l(tmp)>=$l("TERMINAL"),$l(tmp,"TERMINAL")=2 s isTerminal=1 q
-  }
-
-  if isTerminal=1 {
-	s tmp="",^||inData=""  
-	w "Terminal Connect ",$c(0),!
-	s %gl="^MSrv"
-	s ind=0
-    for   {
-       r ^||sym#1:rto 
-       continue:$l(^||sym)=0
-       if ^||sym=$c(10) {
-	      s ind=ind+1 
-          s ^%deb(ind)=^||inData
-          if ind=2 {
-	         TRY { 
-               s ^||UserName=$p(^||inData,":",1)
-               s ^||UserPass=$p(^||inData,":",2)
-               s ^||NameSpace=$p(^||inData,":",3)
-             } CATCH ErrorHandle {  
-               s ^||inData=""  u tio   w "Ошибка формата авт оризации","{{OK}}",!   q 
-             }
-             if $SYSTEM.Security.Login(^||UserName,^||UserPass)=0  s ^||inData=""   u tio    w "Ошибка авторизации","{{OK}}",!   q
-             e                                                     s ^||inData=""   u tio    w "Авторизация прошла успешно","{{OK}}",!   d $zu(5,^||NameSpace)   continue
-             continue
-          }
-          if ^||inData="cls" {
-             k @%gl@($job) 
-             s ^||inData=""
-             continue
-          }
-          if ^||inData="run" {
-	          if '$d(@%gl@($job))  w "{{OK}}",!  s ^||inData=""  continue
-              DO $SYSTEM.Process.NullSubscripts(0)
-              s ^||indBuff=""
-              s routine =##class(%Routine).%New("MSrvTMPFragment"_$JOB_"")
-              Do routine.WriteLine($c(13,10)_" ; d ^MSrvTMPFragment"_$JOB)
-              f   s ^||indBuff=$o(@%gl@($job,^||indBuff))   q:^||indBuff=""   d
-              .    Do routine.Write($c(13,10)_@%gl@($job,^||indBuff))
-              Do routine.WriteLine($c(13,10)_"  q ")
-              Do routine.Save() ;
-              k ^SPOOL($JOB)
-              O 2:($job) 
-              U 2:($job)
-              Do routine.Compile() ;
-              c 2:($job)  
-              k ^SPOOL($JOB)
-              Do routine.%Close()
-              u tio
-              TRY {
-                x " d ^MSrvTMPFragment"_$JOB 
-                c 2:($job)  
-                Do routine.Delete("MSrvTMPFragment"_$JOB_".MAC")
-              } CATCH ErrorHandle { 
-                u tio
-                w "Error:",$c(13,10)
-                w " NameSpace:"_$zu(5),$c(13,10)
-                w $ZTRAP,$c(13,10)
-                w $ESTACK,$c(13,10)
-                w $ECODE,$c(13,10)
-                w $ZERROR,$c(13,10)
-                zw ErrorHandle
-                Do routine.Delete("MSrvTMPFragment"_$JOB_".MAC")
-             }   
-             u tio  w "{{OK}}",!             
-	         s ^||inData=""
-             continue
-          }
-          if $l(^||inData,"run:")=2 {
-	         TRY {  u tio   x $p(^||inData,"run:",2)   w "{{OK}}",!  } CATCH ErrorHandle {  u tio  zw ErrorHandle   w "{{OK}}",!  }   
-	         s ^||inData=""
-	         continue
-          }
-          
-          if ^||inData="job" { 
-             u tio w $job,"{{OK}}",!  
-             s ^||inData=""    
-             continue
-          }
-          if ^||inData="ip" { 
-              if '$d(^||ip) {
-                 s ^||I=$ZU(111,0)
-                 s ^||ip=$A(^||I,1)_"."_$A(^||I,2)_"."_$A(^||I,3)_"."_$A(^||I,4)_":"_($A(^||I,5)*256+$A(^||I,6))
-              }
-             u tio   w ^||ip,"{{OK}}",!   
-             s ^||inData=""          
-             continue
-          }
-          if ^||inData="read" { 
-             if '$d(@%gl@($job))   w "{{OK}}",!  s ^||inData=""  continue
-             s ^||indBuff=""
-             u tio
-             f   s ^||indBuff=$o(@%gl@($job,^||indBuff))   q:^||indBuff=""   d
-             .     w @%gl@($job,^||indBuff),!
-             w "{{OK}}",!
-             s ^||inData=""             
-             continue
-          }
-          
-          if '$d(@%gl@($job))  s @%gl@($job)=0
-          s @%gl@($job)=@%gl@($job)+1
-          s @%gl@($job,@%gl@($job))=^||inData_$c(10)
-          ; u tio w 1,!
-          ; w ":"_ind_"|"_^||inData,!
-          s ^||inData="",^||sym=""
-          continue
-       }
-       s ^||inData=^||inData_^||sym	
-    }
-    u tio   w ^||ip,"{{OK}}",!   
-    k @%gl@($job) 
-    k ^||inData
-    w *-2
-    q  
-  }
-
-
-
-  if isHTML=1 {
-	 r d#255:rto  
-	 s d=tmp_d
-	 w "OK",! ztrap  ; invalid input	   
-     q
-  }
- 
- 
-  if isSMWrap=1 {
-      r d#255:rto 
-      s d=tmp_d
-      d ParseInp
-      i (d<3)!($G(d(1))'=$$$APPTYPE) w $$$errINVALTYPE,$$$cTRM,! ztrap  ; invalid input
-      i d(2)=$$$cmdBRKFLW d BrkFlw^$$$SMGR(d(3)) ; set flag to break group read
-      ; start application server
-      i d(2)=$$$cmdCREATE d CreatePP  d Log(key)   d StartASD
-      ;   i d(2)=$$$cmdOPEN   d OpenPP   d StartASD
-      ; start audit
-      i ($$$TM-at)>ato s at=$$$TM j Audit^$$$SMGR:():jto
-  } 
+ s d="",(ap,oasd,csok)=0 r d#255:rto d ParseInp
+ i (d<3)!($G(d(1))'=$$$APPTYPE) w $$$errINVALTYPE,$$$cTRM,! ztrap  ; invalid input
+ i d(2)=$$$cmdBRKFLW d BrkFlw^$$$SMGR(d(3)) ; set flag to break group read
+ ; start application server
+ i d(2)=$$$cmdCREATE d CreatePP  d Log(key)   d StartASD
+ ;   i d(2)=$$$cmdOPEN   d OpenPP   d StartASD
+ ; start audit
+ i ($$$TM-at)>ato s at=$$$TM j Audit^$$$SMGR:():jto
 endcmd 
    s $ZT=""
    w:'csok *-2
@@ -88547,10 +86786,8 @@ Log(val)
   ; Список костылей для MAKOVA применяются в связи с изменением стандарта в Cache`
   ; функция перехватывает чтения входящих команд от клиента
 CommdFromClienToServer(cmd,var) 
-  ; q $lb(cmd,var)
-  // костыль необходим для MAKOVA 2.1
-  ;  d Log("Запрос:cmd:"_cmd_"|val:"_var)
-  ; s var=$replace(var,"s %SMWOrefs(+%this)=%this","s %SMWOrefs(+##this)=##this")
+  ; d Log("Запрос:cmd:"_cmd_"|val:"_var)
+  s var=$replace(var,"s %SMWOrefs(+%this)=%this","s %SMWOrefs(+##this)=##this")
   s var=$replace(var,"%this","##this")
   s var=$replace(var,$c(17,1)_"Do $ZU(68,56,1)",$c(1)_"d SubsMsgs^%ZMRASD(""DEBUGEVENT"",1,0,""OnMsgCallBack^%ZMRASD"")")
   s var=$replace(var,$c(16,1)_"d $zu(68,56,1)",$c(1)_"d SubsMsgs^%ZMRASD(""DEBUGEVENT"",1,0,""OnMsgCallBack^%ZMRASD"")")
@@ -88579,10 +86816,9 @@ CommdFromClienToServer(cmd,var)
      {
         k ^%ZMRASDKostil($Job)
         s Sub=$p(varTmp,$c(13,10),ind)
-         if $e(Sub,1,2)=" 0" {
-            s Sub=" ;"
-         }
-         s Sub=$REPLACE(Sub,"#endif","      ")
+        
+        s Sub=$REPLACE(Sub,"#endif","      ")
+        
         ; Убираем в строке не читаемые символы
            s res="" for i=1:1:31{s res=res_$c(i)} for i=127:1:144{s res=res_$c(i)}  for i=152:1:191{s res=res_$c(i)} w res   
            s Sub=$tr(Sub,res,"") 
@@ -88594,7 +86830,6 @@ CommdFromClienToServer(cmd,var)
         x "d MOREFTEMP.Implementation.Write($c(13,10))"
         k ^%ZMRASDKostil($Job)
      }
-     
      s var=varEnd
    }
    
@@ -88726,512 +86961,6 @@ Audit n ix,ct,at
 ]]></Routine>
 
 
-<Class name="%ZSMWrap.Class">
-<TimeCreated>64491,59164.075381</TimeCreated>
-</Class>
-
-
-<Class name="%ZSMWrap.Server">
-<Super>%SYS.Task.Definition</Super>
-<TimeCreated>64533,53755.346609</TimeCreated>
-
-<Method name="OnTask">
-<Description>
-Метод стартует из Системного </Description>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[
-      d RUN^%ZMRPMD
-      quit $$$OK
-]]></Implementation>
-</Method>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.Castum">
-<IncludeCode/>
-<Language>cache</Language>
-<TimeCreated>64621,58241.120574</TimeCreated>
-
-<Parameter name="Super">
-<Default> </Default>
-</Parameter>
-
-<Parameter name="Name">
-<Default>Castum</Default>
-</Parameter>
-
-<Parameter name="Descript">
-<Default>Пустой класс с любым набором наследование.</Default>
-</Parameter>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.Csp">
-<IncludeCode/>
-<Language>cache</Language>
-<Super>%CSP.Page</Super>
-<TimeCreated>64621,58280.14959</TimeCreated>
-
-<Parameter name="Super">
-<Default>%CSP.Page</Default>
-</Parameter>
-
-<Parameter name="Name">
-<Default>CSP страница</Default>
-</Parameter>
-
-<Parameter name="Descript">
-<Default>Применяется для обработки HTTP событий</Default>
-</Parameter>
-
-<Method name="OnPage">
-<ClassMethod>1</ClassMethod>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[  Quit $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="OnPreHTTP">
-<ClassMethod>1</ClassMethod>
-<ReturnType>%Library.Boolean</ReturnType>
-<Implementation><![CDATA[
-  Do %response.SetHeader("Content-Type",..ContentType("html")	)   
-  q 1
-]]></Implementation>
-</Method>
-
-<Method name="ContentType">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>FileName</FormalSpec>
-<ReturnType>%Library.String</ReturnType>
-<Implementation><![CDATA[
-  s rashirenie=$p(FileName ,".", $l(FileName,"."))
-  q:rashirenie="html" "text/html"
-  q:rashirenie="htm" "text/html"
-  q:rashirenie="css" "text/css"
-  q:rashirenie="js" "application/javascript"
-  q:rashirenie="txt" "text/plain"
-  q "application/octet-stream"
-]]></Implementation>
-</Method>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.Form">
-<Language>cache</Language>
-<Super>%Library.TMFormClass</Super>
-<TimeCreated>64621,58197.868059</TimeCreated>
-
-<Property name="Form">
-<Type>%Library.TMForm</Type>
-</Property>
-
-<Property name="StaticControl">
-<Type>%Library.String</Type>
-<MultiDimensional>1</MultiDimensional>
-</Property>
-
-<Method name="%OnNew">
-<FormalSpec>initvalue:%String=""</FormalSpec>
-<Language>cache</Language>
-<ProcedureBlock>0</ProcedureBlock>
-<ReturnType>%Status</ReturnType>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[
- n result
- i $d(initvalue)=0 q $$$OK
- i initvalue="" q $$$OK
- d ..Initialization(initvalue)
- s result=..OnCreate(initvalue)
- i result'=$$$OK  d
- e  d ..Form.SetContainer(+##this)
- q result
-]]></Implementation>
-</Method>
-
-<Method name="DesignDefinition">
-<Language>cache</Language>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[
- ;object DesignForm: TDesignForm
- ;  Left = 0
- ;  Top = 0
- ;  Width = 327
- ;  Height = 302
- ;  Caption = 'DesignForm'
- ;  Color = clBtnFace
- ;  Font.Charset = DEFAULT_CHARSET
- ;  Font.Color = clWindowText
- ;  Font.Height = -11
- ;  Font.Name = 'MS Sans Serif'
- ;  Font.Style = []
- ;  OldCreateOrder = False
- ;  Visible = True
- ;  PixelsPerInch = 96
- ;  TextHeight = 13
- ;end
-]]></Implementation>
-</Method>
-
-<Method name="Destroy">
-<Language>cache</Language>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[ q
-]]></Implementation>
-</Method>
-
-<Method name="Initialization">
-<FormalSpec>initvalue:%String=""</FormalSpec>
-<Language>cache</Language>
-<PublicList>MApplication</PublicList>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[
- s MApplication.ClientState="Loading"
- d ..LoadResources()
- s ..Form=##class(%Library.TMForm).%New(initvalue)
- s MApplication.ClientState="NoWait"
- ;s ..Form.Visible="False"
- d ..Form.SetMultiProperty($lb("Left","Top","Width","Height","Caption","Color","OldCreateOrder","PixelsPerInch"),$lb(0,0,327,302,"DesignForm",$$$clBtnFace,"False",96),$lb(0,0,0,0,0,0,0,0))
- d ..Form.Font.SetMultiProperty($lb("Charset","Color","Height","Name","Style"),$lb($$$DEFAULTCHARSET,$$$clWindowText,-11,"MS Sans Serif",$lb()))
- s MApplication.ClientState="Wait"
- q
-]]></Implementation>
-</Method>
-
-<Method name="LoadResources">
-<Language>cache</Language>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[ q
-]]></Implementation>
-</Method>
-
-<Method name="OnCreate">
-<FormalSpec>initvalue:%String=""</FormalSpec>
-<Language>cache</Language>
-<ReturnType>%Status</ReturnType>
-<SoapBindingStyle>document</SoapBindingStyle>
-<SoapBodyUse>literal</SoapBodyUse>
-<Implementation><![CDATA[ q $$$OK
-]]></Implementation>
-</Method>
-
-<Storage name="Default">
-<Type>%Library.CacheSerialState</Type>
-</Storage>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.Persistent">
-<IncludeCode/>
-<Language>cache</Language>
-<Super>%Library.Persistent</Super>
-<TimeCreated>64621,58318.363962</TimeCreated>
-
-<Parameter name="Super">
-<Default>%Library.Persistent</Default>
-</Parameter>
-
-<Parameter name="Name">
-<Default>%Persistent-Хранимый класс</Default>
-</Parameter>
-
-<Parameter name="Descript">
-<Default>может храниться в базе данных</Default>
-</Parameter>
-
-<Storage name="Default">
-<Type>%Library.CacheStorage</Type>
-<DataLocation>^%ZSMWrap.Template.PersistentD</DataLocation>
-<DefaultData>PersistentDefaultData</DefaultData>
-<IdLocation>^%ZSMWrap.Template.PersistentD</IdLocation>
-<IndexLocation>^%ZSMWrap.Template.PersistentI</IndexLocation>
-<StreamLocation>^%ZSMWrap.Template.PersistentS</StreamLocation>
-<Data name="PersistentDefaultData">
-<Structure>listnode</Structure>
-<Subscript/>
-<Value name="1">
-<Value>%%CLASSNAME</Value>
-</Value>
-</Data>
-</Storage>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.Registered">
-<IncludeCode/>
-<Language>cache</Language>
-<Super>%Library.RegisteredObject</Super>
-<TimeCreated>64621,58340.428537</TimeCreated>
-
-<Parameter name="Super">
-<Default>%Library.Registered </Default>
-</Parameter>
-
-<Parameter name="Name">
-<Default>%Library.Registered</Default>
-</Parameter>
-
-<Parameter name="Descript">
-<Default>не могут храниться в базе данных</Default>
-</Parameter>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.SerialObject">
-<IncludeCode/>
-<Language>cache</Language>
-<Super>%Library.SerialObject</Super>
-<TimeCreated>64621,58447.772797</TimeCreated>
-
-<Storage name="Default">
-<Type>%Library.CacheSerialState</Type>
-<StreamLocation>^%ZSMWrap.TempB263.SerialObjectS</StreamLocation>
-</Storage>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.ShadowControl">
-<IncludeCode/>
-<Language>cache</Language>
-<Super>%SYS.Task.Definition</Super>
-<TimeCreated>64621,58405.513933</TimeCreated>
-
-<Method name="OnTask">
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[   quit $$$OK
-]]></Implementation>
-</Method>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.WebForm">
-<Language>cache</Language>
-<Super>%Library.TMWebFormClass</Super>
-<TimeCreated>64646,42146.553754</TimeCreated>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.WebSocketServer">
-<IncludeCode/>
-<Language>cache</Language>
-<Super>%CSP.WebSocket</Super>
-<TimeCreated>64621,58523.142602</TimeCreated>
-
-<Method name="OnPreServer">
-<ReturnType>%Library.Status</ReturnType>
-<Implementation><![CDATA[   Quit $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="Server">
-<ReturnType>%Library.Status</ReturnType>
-<Implementation><![CDATA[
-    Set $ZT="Error"
-    Set timeout=10
-    Set status=..Write("Welcome to Cache WebSocket. NameSpace: "_$NameSpace)
-    For  {
-      Set len=32656
-      Set data=..Read(.len, .status, timeout)
-      If $$$ISERR(status),$$$GETERRORCODE(status) = $$$CSPWebSocketClosed Quit
-      If $$$ISERR(status),$$$GETERRORCODE(status) = $$$CSPWebSocketTimeout {
-         Set data="Timeout after "_timeout_" seconds"_" occurred on "_$ZDate(+$Horolog,2)_" at "_$ZTime($Piece($Horolog,",",2),3)
-         Set status=..Write(data)
-      }else {
-           If data="exit" Quit
-           Set data="'"_data_"'"_" (length="_len_") recieved on "_$ZDate(+$Horolog,2)_" at "_$ZTime($Piece($Horolog,",",2),3)_" NameSpace="_$NameSpace
-           Set status=..Write(data)
-        }
-    }
-   Set status=..EndServer()
-   Quit $$$OK
-Error // Error
-   Quit $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="OnPostServer">
-<ReturnType>%Library.Status</ReturnType>
-<Implementation><![CDATA[  Quit $$$OK
-]]></Implementation>
-</Method>
-</Class>
-
-
-<Class name="%ZSMWrap.Template.XDataHTML">
-<Super>%CSP.Page</Super>
-<TimeCreated>64540,47462.033772</TimeCreated>
-
-<Parameter name="Typ">
-<Default>html</Default>
-</Parameter>
-
-<Method name="OnPage">
-<Description>
-обработка </Description>
-<ClassMethod>1</ClassMethod>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[
-     Set xdataID=##this_"||"_%request.Get("content")
-     Set compiledXdata=##class(%Dictionary.CompiledXData).%OpenId(xdataID)
-     ; Если тип содержимого неопределено, тогда  отправляем клиенту как есть
-     for  {
-       q:compiledXdata.Data.AtEnd
-       d ..ExecFrag(compiledXdata.Data.Read(32000) ,"#(", ")#" )
-     }
-     Quit $$$OK
-]]></Implementation>
-</Method>
-
-<XData name="ContentHTML">
-<Description>
-Содержимое HTML страницы</Description>
-<Data><![CDATA[
-<html>
-<head>
-<!-- Put your page Title here -->
-<title>	Cache Server Page </title>
-</head>
-<body>
-   <!-- Put your page code here -->
-   <br/> Тело страницы
-   <br/>Выполнить однострочную терминальную команду  Cache` 
-   <pre>
-    <br/> ----------------------------
-    <br/> Время  #( W $ZDt($h) )#
-    <br/> Сервер #( W $ZU(110) )#
-    <br/> Клиент #( s I=$ZU(111,0),ip=$A(I,1)_"."_$A(I,2)_"."_$A(I,3)_"."_$A(I,4)_":"_($A(I,5)*256+$A(I,6))  w ip    )#
-    <br/> ----------------------------
-   </pre>
-    <server>
-       for a=1:1:100 {
-          w a,!,"<br/>"
-       }
-    </server>
-</body>
-</html>
-]]></Data>
-</XData>
-
-<Method name="ExecFrag">
-<Description>
-Метод разбики исходного текста на Cache` код и HTML текст</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>SrcCode="",Beg="",End=""</FormalSpec>
-<Implementation><![CDATA[
-     q:SrcCode=""
-     q:Beg=""
-     q:End=""
-     for ind=1:1:$l(SrcCode,End){
-        s tmp=$p(SrcCode,End,ind)
-        s Html=$p(tmp,Beg,1)
-        s Code=$p(tmp,Beg,2)
-        d ..ExecBigFrag(Html,"<server>","</server>")
-        TRY {
-           x Code
-        } CATCH ErrorHandle { 
-           zw ErrorHandle 
-        }
-     }
-]]></Implementation>
-</Method>
-
-<Method name="ExecBigFrag">
-<Description>
-Метод разбики исходного текста на Cache` код и HTML текст</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[SrcCode="",Beg="<server>",End="</server>"]]></FormalSpec>
-<Implementation><![CDATA[
-	
-     q:SrcCode=""
-     q:Beg=""
-     q:End=""
-     for ind=1:1:$l(SrcCode,End){
-         s tmp=$p(SrcCode,End,ind)
-         s Html=$p(tmp,Beg,1)
-         s Code=$p(tmp,Beg,2)
-         w Html
-         D $SYSTEM.Process.NullSubscripts(0)
-         s MacName=$Replace(##THIS,".","")
-         s MacName=$Replace(MacName,"%","")
-         s MacName="mtempXDataHTML"_MacName_"Fragment"_$JOB_""
-         s routine =##class(%Routine).%New(MacName)
-         if routine="" {
-	        w MacName,!
-	        w Code
-         } else {
-            D routine.Write($c(13,10)_" ; d ^"_MacName_$c(13,10))
-            d routine.WriteLine(Code) 
-            k ^SPOOL($job) 
-            O 2:($job)   U 2:($job)
-            Do routine.Compile() ;
-            c 2:($job)  
-            Do routine.%Close()
-            k ^SPOOL($job) 
-            u 0
-            TRY {  x " d ^"_MacName   } CATCH ErrorHandle {         }
-            Do routine.Delete(MacName_".MAC")	
-         }
-    }
-]]></Implementation>
-</Method>
-
-<Method name="OnPreHTTP">
-<ClassMethod>1</ClassMethod>
-<ReturnType>%Library.Boolean</ReturnType>
-<Implementation><![CDATA[
-  /// Тип содержимого (Как интерпритировать содержимое браузером)
-    s typ=..#Typ
-    if $d(%request.Data("typ",1))
-    {
-      s typ=%request.Data("typ",1)  
-    }
-    Do %response.SetHeader("Content-Type",..ContentType(typ))     
-   /// Получаем название контейнера в котором хронится содержимое для клиента
-    s content="ContentHTML"
-    if $d(%request.Data("content",1))
-    {
-       s content=%request.Get("content",1)  
-    }else{
-       d %request.Set("content",content)
-    }
-    if $d(%request.Data("download",1))
-    {
-       Do %response.SetHeader("Content-Disposition: attachment; filename=",##this_"."_..#Typ) 
-       q 1  
-    }
-    q 1
-]]></Implementation>
-</Method>
-
-<Method name="ContentType">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>FileName</FormalSpec>
-<ReturnType>%Library.String</ReturnType>
-<Implementation><![CDATA[
-  s rashirenie=$p(FileName ,".", $l(FileName,"."))
-  q:rashirenie="html" "text/html"
-  q:rashirenie="htm" "text/html"
-  q:rashirenie="css" "text/css"
-  q:rashirenie="js" "application/javascript"
-  q:rashirenie="txt" "text/plain"
-  q:rashirenie="bmp" "image/bmp"
-  q:rashirenie="jpg" "image/jpeg"
-  q:rashirenie="png" "image/png"
-  q:rashirenie="xls" "application/x-excel"
-  q:rashirenie="tif" "image/x-tiff"
-  q:rashirenie="xml" "text/xml"
-  q:rashirenie="zip" "application/zip"
-  q "application/octet-stream"
-]]></Implementation>
-</Method>
-</Class>
-
-
 <Routine name="Convert2012" type="MAC" languagemode="0"><![CDATA[
 Convert2012
  q
@@ -89295,12 +87024,12 @@ ReplaceText(Text,PackName) public {
 <Routine name="MAKOVA" type="MAC" languagemode="0"><![CDATA[
     /*
     zn "%SYS"
-    d export^MAKOVA("C:\Distrib\SMWrap(3.4)\SMWrap.xml")
+    d export^MAKOVA("")
     */
 export(path)
  ;  d RUN^%ZMRPMD("E:\!5autoexport\myasnikovia\MakovaBackUp\")
  ;  d RUN^%ZMRPMD("C:\BackUp\")
- ;  d HALT^%ZMRPMD 
+ ;  d RUN^%ZMRPMD
  ;  d HALT^%ZMRPMD    ; Остановить сервер
  ;  d CONFIG^%ZMRPMD
      k all
@@ -89309,8 +87038,7 @@ export(path)
      s all("Convert2012.MAC")=""
     ; 
     ; Сервер 
-     s all("%Const.mac")=""
-     s all("%ZConst.INC")=""
+     s all("%Const.INC")=""
      s all("%ZMRAUTH.INT")=""
      s all("ZMRDEF.INC")=""
      s all("%ZMRASD.MAC")=""
@@ -89323,26 +87051,6 @@ export(path)
      s all("%ZMRProgramCosta.MAC")=""
      s all("%ZMRProgramAuthor.MAC")=""
      s all("%ZMRMStudioHooks.mac")=""
-     
-  ; классы для Cache2017        
-     s all("%ZSMWrap.Class.CLS")=""
-     ;  s all("%ZSMWrap.Utility.CLS")=""
-     ;  s all("%ZSMWrap.Client.CLS")=""       ; Клиент  
-     s all("%ZSMWrap.Server.CLS")=""       ; Автозапуск сервера
-   
-     s all("%ZSMWrap.Template.Castum.CLS")=""
-     s all("%ZSMWrap.Template.Csp.CLS")=""
-     s all("%ZSMWrap.Template.Form.CLS")=""
-     s all("%ZSMWrap.Template.Persistent.CLS")=""
-     s all("%ZSMWrap.Template.Registered.CLS")=""
-     s all("%ZSMWrap.Template.SerialObject.CLS")=""
-     s all("%ZSMWrap.Template.ShadowControl.CLS")=""
-     s all("%ZSMWrap.Template.WebSocketServer.CLS")=""
-     s all("%ZSMWrap.Template.XDataHTML.CLS")=""
-     s all("%ZSMWrap.Template.WebForm.CLS")=""
-   
-     s all("^%ZSMTemplate.GBL")=""   ; Глобаль в которой хранится описание шаблонов классов
-     
    ;
    ; проект
    ;   s all("SMProject.GBL")=""     ; Глобаль в которой хранится  описание проектов
@@ -89350,7 +87058,6 @@ export(path)
    ;
    ; классы МАКОВА
      s all("%Library.SMProject.cls")=""
-     s all("%Library.TMWebFormClass.CLS")=""
      s all("%Library.TMApplication.cls")=""
      s all("%Library.TMAreaSeries.cls")=""
      s all("%Library.TMArrowSeries.cls")=""
@@ -89494,7 +87201,7 @@ export(path)
      s all("%Library.TMTreeView.cls")=""
      s all("%Library.TMView3DOptions.cls")=""
      s all("%Library.TMWinControl.cls")=""
-     if $l(path)=0     d $system.OBJ.Export(.all,"C:\TEMP\SMWRap\ProjectSMWrap2017("_$REPLACE($zd(+$h,4),"/","-")_").xml")
+     if $l(path)=0     d $system.OBJ.Export(.all,"C:\temp\ProjectMakova15.xml")
      e  d $system.OBJ.Export(.all,path)
      k all
      q
@@ -89520,9 +87227,7 @@ export(path)
      s all("MAKOVABIN.MAC")=""
     ; 
     ; Сервер 
-     ; s all("%Const.INC")=""
-     s all("%Const.MAC")=""
-     s all("%ZConst.INC")=""
+     s all("%Const.INC")=""
      s all("%ZMRAUTH.OBJ")=""
      s all("ZMRDEF.INC")=""
      s all("%ZMRASD.OBJ")=""
@@ -89538,28 +87243,6 @@ export(path)
      s all("%ZMRProgramAuthor.OBJ")=""
      s all("%ZMRMStudioHooks.mac")=""
      s all("%ZMRMStudioHooks.OBJ")=""
-     
-  ; классы для Cache2017        
-     s all("%ZSMWrap.Class.CLS")=""
-    ; s all("%ZSMWrap.Utility.CLS")=""
-    ; s all("%ZSMWrap.Client.CLS")=""       ; Клиент  
-     s all("%ZSMWrap.Server.CLS")=""       ; Автозапуск сервера
-
-
-    s all("%ZSMWrap.Template.Castum.CLS")=""
-     s all("%ZSMWrap.Template.Csp.CLS")=""
-     s all("%ZSMWrap.Template.Form.CLS")=""
-     s all("%ZSMWrap.Template.Persistent.CLS")=""
-     s all("%ZSMWrap.Template.Registered.CLS")=""
-     s all("%ZSMWrap.Template.SerialObject.CLS")=""
-     s all("%ZSMWrap.Template.ShadowControl.CLS")=""
-     s all("%ZSMWrap.Template.WebSocketServer.CLS")=""
-     s all("%ZSMWrap.Template.XDataHTML.CLS")=""
-     s all("%ZSMWrap.Template.WebForm.CLS")=""
-
-     s all("^%ZSMTemplate.GBL")=""   ; Глобаль в которой хранится описание шаблонов классов
- 
-     
    ;
    ; проект
    ;   s all("SMProject.GBL")=""     ; Глобаль в которой хранится  описание проектов
@@ -89710,7 +87393,7 @@ export(path)
      s all("%Library.TMTreeView.cls")=""
      s all("%Library.TMView3DOptions.cls")=""
      s all("%Library.TMWinControl.cls")=""
-     if $l(path)=0     d $system.OBJ.Export(.all,"C:\TEMP\SMWRap\PublicProjectSMWrap2017("_$REPLACE($zd(+$h,4),"/","-")_").xml")
+     if $l(path)=0     d $system.OBJ.Export(.all,"C:\temp\PublicProjectMakova.xml")
      e  d $system.OBJ.Export(.all,path)
      k all
      q
@@ -89719,8 +87402,7 @@ export(path)
 
 
 <Routine name="ZMRDEF" type="INC"><![CDATA[
- ; %ZMRPMD macro definitions
- ;  ZMRDEF
+ ; ZMRPMD macro definitions
 #define errNOJOB        "<NO JOB>"
 #define errINVALTYPE    "<INVALID TYPE>"
 #define errNOLIC        "<NO LICENSE>"
@@ -89893,170 +87575,4 @@ export(path)
 #define X       %ZoMRi(2177)
  ;
 ]]></Routine>
-
-
-<Global>
-<Node><Sub>^%ZSMTemplate</Sub>
-<Node><Sub>%Persistent-Хранимый класс</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.Persistent</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Может храниться в базе данных</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>CSP страница</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.Csp</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Применяется для обработки HTTP событий</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>Castum: Пустой класс без суперклассов</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.Castum</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Пустой класс с любым набором наследование.</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>Library.Registered -  Не хранимый класс</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.Registered</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Не может храниться в базе данных</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>Library.Serial </Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.SerialObject</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Может быть встроен в объекты Persistent</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>Persistent-Хранимый класс</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.Persistent</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Может храниться в базе данных</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>SMWrap Web Form  (дизайнер)</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.WebForm</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Класс для дизайнера Вэб форм</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>SMWrap форма (дизайнер)</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.Form</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Класс форма для SMWrap поигрывателя</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>Web Socket контроллер</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.WebSocketServer</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Серверная часть вэб сокета</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>XData страница</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.XDataHTML</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<Data>Применяется для обработки HTTP событий</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>USER</Data>
-</Node>
-</Node>
-<Node><Sub>Класс CSP Html (%ZHTML.CacheLib )</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.CspCacheLib</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<DataCrLf><![CDATA[Шаблон класса CSP с подключенной библиотекой %ZHTML.CacheLib
-
-1) Пример написания JS метода
-2) Синхронный и Асинхронный вызов класс-метода Cache`
-]]></DataCrLf>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>SIRENA</Data>
-</Node>
-</Node>
-<Node><Sub>Класс Prototyp Html  (  %ZHTML.CacheLib  )</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.PrototypHTML</Data>
-</Node>
-<Node><Sub>Description</Sub>
-<DataCrLf><![CDATA[Шаблон класса HTML элемента  
-
-1) Необходимо переименовать метод конструктора. Название метода конструктора должено совподать с именем класса
-
-Пример использования:
-<html>
-<head>
-<title>	Cache Server Page </title>
-</head>
-<body>
- <script src='%25ZHTML.CacheLib.cls' type='text/javascript' ></script>
- <script src='User.Prototyp3.cls' type='text/javascript' ></script>
- <my-input>222222</my-input>
-</body>
-</html>
-
-]]></DataCrLf>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>SIRENA</Data>
-</Node>
-</Node>
-<Node><Sub>Класс Prototyp JS (%ZHTML.CacheLib )</Sub>
-<Node><Sub>ClassName</Sub>
-<Data>%ZSMWrap.Template.PrototypJS</Data>
-</Node>
-<Node><Sub>NameSpace</Sub>
-<Data>SIRENA</Data>
-</Node>
-</Node>
-</Node>
-</Global>
 </Export>
