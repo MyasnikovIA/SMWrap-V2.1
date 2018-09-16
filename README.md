@@ -20,5 +20,5 @@
       do $zu(5,OldNs)
       do RUN^%ZMRPMD()
  </pre>
- <h3>Видеоролик для инсталляциипроекта: </h3>
+ <h3>Видеоролик для инсталляции проекта: </h3>
 https://www.youtube.com/watch?v=gy7eF1av0-8 
